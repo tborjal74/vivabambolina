@@ -1,0 +1,225 @@
+@page "/"
+@layout AuthLayout
+@rendermode InteractiveServer
+
+<PageTitle>Viva Bambolina Home</PageTitle>
+
+<div class="home-shell">
+    <header class="store-nav" aria-label="Store navigation">
+        <a class="wordmark" href="">Luxe Gowns</a>
+
+        <nav>
+            <a class="active" href="">Home</a>
+            <a href="#">Shop</a>
+            <a href="#">Custom Gowns</a>
+            <a href="#">About Us</a>
+            <a href="#">Contact</a>
+        </nav>
+
+        <div class="nav-actions" aria-label="Account actions">
+            <button type="button" title="Search">⌕</button>
+            <button type="button" title="Account">♙</button>
+            <button type="button" class="bag-button" title="Cart">
+                ♧
+                <span>2</span>
+            </button>
+        </div>
+    </header>
+
+    <main class="product-studio">
+        <aside class="product-column" aria-label="Gown setup">
+            <div class="product-card">
+                <div class="gown-art" aria-hidden="true">
+                    <div class="dress-bodice"></div>
+                    <div class="dress-skirt"></div>
+                </div>
+            </div>
+
+            <section class="step-list" aria-label="Visualizer steps">
+                @foreach (var step in steps)
+                {
+                    <button type="button" class="@GetStepClass(step.Number)">
+                        <span>@step.Number</span>
+                        <strong>@step.Title</strong>
+                        <small>@step.Description</small>
+                    </button>
+                }
+            </section>
+        </aside>
+
+        <section class="config-panel" aria-label="AI visualizer settings">
+            <div class="product-title">
+                <p class="eyebrow">AI Visualizer</p>
+                <h1>Embellished A-Line Gown</h1>
+                <strong>$599.00</strong>
+            </div>
+
+            <div class="settings-card">
+                <div class="settings-heading">
+                    <span>✧</span>
+                    <div>
+                        <h2>See how it looks on you</h2>
+                        <p>Choose the gown details, add measurements, and preview the look.</p>
+                    </div>
+                </div>
+
+                <div class="field-block">
+                    <label for="style">1. Style &amp; Design</label>
+                    <select id="style" class="form-control" @bind="selectedStyle">
+                        <option>Embellished A-Line Gown</option>
+                        <option>Romantic Tulle Ball Gown</option>
+                        <option>Satin Column Gown</option>
+                    </select>
+                </div>
+
+                <div class="field-block">
+                    <label for="fabric">2. Fabric &amp; Color</label>
+                    <select id="fabric" class="form-control" @bind="selectedFabric">
+                        <option>Sequin Tulle</option>
+                        <option>Soft Organza</option>
+                        <option>Silk Satin</option>
+                    </select>
+
+                    <div class="swatches" aria-label="Gown color">
+                        @foreach (var color in colors)
+                        {
+                            <button type="button"
+                                    class="@(selectedColor == color.Name ? "selected" : null)"
+                                    style="background:@color.Value"
+                                    title="@color.Name"
+                                    @onclick="() => selectedColor = color.Name"></button>
+                        }
+                    </div>
+                </div>
+
+                <div class="field-block">
+                    <label>3. Measurements <small>(inches)</small></label>
+                    <div class="measurement-grid">
+                        @foreach (var item in measurements)
+                        {
+                            <label>
+                                @item.Label
+                                <input class="form-control" value="@item.Value" />
+                            </label>
+                        }
+                    </div>
+                </div>
+
+                <div class="upload-card">
+                    <div>
+                        <span>☁</span>
+                        <strong>Upload front-facing full body photo</strong>
+                        <small>JPG, PNG up to 10MB</small>
+                    </div>
+                    <div class="mini-photo" aria-hidden="true"></div>
+                </div>
+
+                <button type="button" class="generate-button">
+                    ✦ Generate AI Preview
+                </button>
+            </div>
+        </section>
+
+        <section class="preview-panel" aria-label="AI generated preview">
+            <div class="preview-header">
+                <div>
+                    <p class="eyebrow">AI Generated Preview</p>
+                    <h2>Customer gown visualization</h2>
+                    <p>This preview is for visualization only.</p>
+                </div>
+                <button type="button" class="outline-button">Download Image</button>
+            </div>
+
+            <div class="comparison">
+                <figure>
+                    <span>Your Photo</span>
+                    <div class="person-figure photo-source" aria-hidden="true"></div>
+                </figure>
+                <div class="compare-arrow" aria-hidden="true">→</div>
+                <figure>
+                    <span>AI Preview</span>
+                    <div class="person-figure gown-preview" aria-hidden="true"></div>
+                </figure>
+            </div>
+
+            <div class="preview-note">
+                <span>ⓘ</span>
+                <p>The AI preview is generated for visualization purposes only. Final gown fit, fabric behavior, and appearance may vary.</p>
+            </div>
+
+            <div class="checkout-row">
+                <strong>$599.00</strong>
+                <div class="quantity-control" aria-label="Quantity">
+                    <button type="button" @onclick="DecreaseQuantity">−</button>
+                    <span>@quantity</span>
+                    <button type="button" @onclick="IncreaseQuantity">+</button>
+                </div>
+                <button type="button" class="cart-button">Add to Cart</button>
+                <button type="button" class="outline-button">Buy It Now</button>
+            </div>
+
+            <aside class="selection-card" aria-label="Your selections">
+                <div>
+                    <h3>Your Selections</h3>
+                    <button type="button">Edit</button>
+                </div>
+                <ul>
+                    <li>Style: @selectedStyle</li>
+                    <li>Fabric: @selectedFabric</li>
+                    <li>Color: @selectedColor</li>
+                    <li>Measurements: 7 values entered</li>
+                    <li>Photo: Uploaded</li>
+                </ul>
+            </aside>
+        </section>
+    </main>
+</div>
+
+@code {
+    private int quantity = 1;
+    private string selectedStyle = "Embellished A-Line Gown";
+    private string selectedFabric = "Sequin Tulle";
+    private string selectedColor = "Blush Pink";
+
+    private readonly Step[] steps =
+    [
+        new(1, "Style & Design", "Select your gown style"),
+        new(2, "Fabric & Color", "Choose fabric and color"),
+        new(3, "Measurements", "Enter your measurements"),
+        new(4, "Upload Photo", "Upload your photo"),
+        new(5, "AI Preview", "Generate your preview")
+    ];
+
+    private readonly ColorSwatch[] colors =
+    [
+        new("Blush Pink", "#f1cfc3"),
+        new("Champagne", "#e4bf95"),
+        new("Midnight Navy", "#13284d"),
+        new("Onyx", "#171717"),
+        new("Emerald", "#0e623e"),
+        new("Ruby", "#bb1628")
+    ];
+
+    private readonly Measurement[] measurements =
+    [
+        new("Height", "65"),
+        new("Bust", "34"),
+        new("Waist", "26"),
+        new("Hips", "36"),
+        new("Shoulder Width", "15"),
+        new("Dress Length", "58"),
+        new("Sleeve Length", "22")
+    ];
+
+    private string GetStepClass(int stepNumber) => stepNumber == 1 ? "active" : string.Empty;
+
+    private void DecreaseQuantity() => quantity = Math.Max(1, quantity - 1);
+
+    private void IncreaseQuantity() => quantity++;
+
+    private sealed record Step(int Number, string Title, string Description);
+
+    private sealed record ColorSwatch(string Name, string Value);
+
+    private sealed record Measurement(string Label, string Value);
+}

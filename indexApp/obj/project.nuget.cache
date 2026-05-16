@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "dgSpecHash": "fZv6amWxP0w=",
+  "success": true,
+  "projectFilePath": "C:\\Users\\pc\\Downloads\\Projects\\vivabambolina\\indexApp\\indexApp.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\pc\\.nuget\\packages\\microsoft.aspnetcore.app.internal.assets\\10.0.8\\microsoft.aspnetcore.app.internal.assets.10.0.8.nupkg.sha512"
+  ],
+  "logs": []
+}

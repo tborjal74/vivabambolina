@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 1600" role="img" aria-labelledby="title desc">
+  <title id="title">AI gown visualizer placeholder</title>
+  <desc id="desc">A placeholder preview for the gown visualization workflow.</desc>
+  <defs>
+    <linearGradient id="background" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0%" stop-color="#f7f2ee" />
+      <stop offset="100%" stop-color="#d7e5e4" />
+    </linearGradient>
+    <linearGradient id="dress" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0%" stop-color="#f5d0d7" />
+      <stop offset="100%" stop-color="#8fb4b2" />
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="1600" fill="url(#background)" />
+  <circle cx="600" cy="330" r="112" fill="#4f5962" opacity=".9" />
+  <path d="M520 460h160l56 230H464z" fill="#4f5962" opacity=".95" />
+  <path d="M458 675h284l190 610H268z" fill="url(#dress)" />
+  <path d="M460 675c92 120 190 180 280 0" fill="none" stroke="#ffffff" stroke-width="20" opacity=".55" />
+  <path d="M390 880c142 80 282 80 420 0M340 1060c174 96 346 96 520 0" fill="none" stroke="#ffffff" stroke-width="14" opacity=".35" />
+  <rect x="238" y="1318" width="724" height="88" rx="16" fill="#ffffff" opacity=".72" />
+  <text x="600" y="1375" text-anchor="middle" font-family="Arial, sans-serif" font-size="34" fill="#3e4b52">Preview placeholder</text>
+</svg>

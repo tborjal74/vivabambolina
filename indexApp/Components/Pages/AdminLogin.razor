@@ -1,0 +1,107 @@
+@page "/admin/login"
+@layout AuthLayout
+@rendermode InteractiveServer
+@inject NavigationManager Navigation
+
+<PageTitle>Admin Login</PageTitle>
+
+<section class="login-page">
+    <div class="brand-panel">
+        <a class="brand-mark" href="">
+            <span>VB</span>
+            <strong>Viva Bambolina</strong>
+        </a>
+
+        <div class="brand-copy">
+            <p class="eyebrow">Staff access</p>
+            <h1>AI gown visualizer admin</h1>
+            <p>
+                A private workspace for boutique staff to prepare customer gown previews, review product imagery, and manage visualizer requests.
+            </p>
+        </div>
+
+        <div class="soft-stats" aria-label="Admin workspace highlights">
+            <div>
+                <span>Role</span>
+                <strong>Admin only</strong>
+            </div>
+            <div>
+                <span>Area</span>
+                <strong>Visualizer</strong>
+            </div>
+        </div>
+    </div>
+
+    <div class="login-card" aria-label="Admin login form">
+        <div class="login-card-header">
+            <p class="eyebrow">Secure sign in</p>
+            <h2>Welcome back</h2>
+            <p>Use your staff credentials to continue.</p>
+        </div>
+
+        <EditForm Model="loginModel" OnValidSubmit="SubmitAsync">
+            <DataAnnotationsValidator />
+
+            <div class="form-stack">
+                <label>
+                    Staff email
+                    <InputText class="form-control" @bind-Value="loginModel.Email" autocomplete="username" placeholder="admin@vivabambolina.com" />
+                </label>
+
+                <label>
+                    Password
+                    <InputText class="form-control" @bind-Value="loginModel.Password" type="password" autocomplete="current-password" placeholder="Enter password" />
+                </label>
+
+                <div class="login-row">
+                    <label class="check-row">
+                        <InputCheckbox @bind-Value="loginModel.RememberDevice" />
+                        <span>Remember this device</span>
+                    </label>
+
+                    <a href="mailto:admin@vivabambolina.com">Need access?</a>
+                </div>
+
+                <ValidationSummary />
+
+                @if (!string.IsNullOrWhiteSpace(statusMessage))
+                {
+                    <div class="login-status" role="status">@statusMessage</div>
+                }
+
+                <button class="btn btn-primary login-button" type="submit">
+                    Sign in to visualizer
+                </button>
+            </div>
+        </EditForm>
+    </div>
+</section>
+
+@code {
+    private readonly LoginModel loginModel = new()
+    {
+        Email = "admin@vivabambolina.com"
+    };
+
+    private string? statusMessage;
+
+    private async Task SubmitAsync()
+    {
+        statusMessage = "Frontend login shell ready. Authentication service will be connected next.";
+        await Task.Delay(350);
+        Navigation.NavigateTo("/");
+    }
+
+    private sealed class LoginModel
+    {
+        [System.ComponentModel.DataAnnotations.Required]
+        [System.ComponentModel.DataAnnotations.EmailAddress]
+        public string Email { get; set; } = string.Empty;
+
+        [System.ComponentModel.DataAnnotations.Required]
+        [System.ComponentModel.DataAnnotations.MinLength(8)]
+        public string Password { get; set; } = string.Empty;
+
+        public bool RememberDevice { get; set; } = true;
+    }
+}

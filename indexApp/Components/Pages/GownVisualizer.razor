@@ -1,0 +1,207 @@
+@page "/ai-visualizer"
+@rendermode InteractiveServer
+@using Microsoft.Extensions.Options
+@inject IGownVisualizationService VisualizationService
+@inject IOptions<AiVisualizerOptions> VisualizerOptions
+
+<PageTitle>AI Gown Visualizer</PageTitle>
+
+<div class="visualizer-page">
+    <section class="visualizer-header">
+        <div>
+            <p class="eyebrow">Shopify AI feature foundation</p>
+            <h1>AI Gown Visualizer</h1>
+            <p class="lead">
+                Upload a customer reference photo, connect it to a Shopify gown, and generate a preview through the configured image provider.
+            </p>
+        </div>
+        <div class="provider-status">
+            <span>Provider</span>
+            <strong>@Options.Provider</strong>
+        </div>
+    </section>
+
+    <section class="visualizer-workspace">
+        <div class="setup-panel">
+            <h2>Preview Request</h2>
+
+            <div class="field-grid">
+                <label>
+                    Shopify product ID
+                    <input class="form-control" @bind="form.ProductId" placeholder="gid://shopify/Product/..." />
+                </label>
+
+                <label>
+                    Product title
+                    <input class="form-control" @bind="form.ProductTitle" placeholder="Ivory satin ball gown" />
+                </label>
+
+                <label>
+                    Product image URL
+                    <input class="form-control" @bind="form.GarmentImageUrl" placeholder="https://cdn.shopify.com/..." />
+                </label>
+
+                <label>
+                    Styling prompt
+                    <textarea class="form-control" @bind="form.Prompt" rows="4" placeholder="Keep gown shape accurate, natural lighting, boutique fitting room."></textarea>
+                </label>
+            </div>
+
+            <div class="upload-zone">
+                <InputFile OnChange="OnCustomerImageSelected" accept="@AcceptAttribute" />
+                <div>
+                    <strong>@SelectedFileName</strong>
+                    <span>Accepted: @AllowedTypesLabel. Limit: @MaxUploadMegabytes MB.</span>
+                </div>
+            </div>
+
+            @if (!string.IsNullOrWhiteSpace(errorMessage))
+            {
+                <div class="alert alert-warning" role="alert">@errorMessage</div>
+            }
+
+            <button class="btn btn-primary" @onclick="CreatePreviewAsync" disabled="@(!CanCreatePreview)">
+                @(isBusy ? "Generating..." : "Generate preview")
+            </button>
+        </div>
+
+        <div class="result-panel">
+            <h2>Result</h2>
+
+            @if (result is null)
+            {
+                <div class="empty-result">
+                    <img src="images/visualizer-placeholder.svg" alt="AI visualizer placeholder" />
+                    <p>No preview generated yet.</p>
+                </div>
+            }
+            else
+            {
+                <img class="preview-image" src="@result.PreviewImageUrl" alt="Generated gown visualization preview" />
+                <dl class="result-meta">
+                    <div>
+                        <dt>Status</dt>
+                        <dd>@result.Status</dd>
+                    </div>
+                    <div>
+                        <dt>Job ID</dt>
+                        <dd>@result.JobId</dd>
+                    </div>
+                    <div>
+                        <dt>Created</dt>
+                        <dd>@result.CreatedAt.ToLocalTime().ToString("g")</dd>
+                    </div>
+                </dl>
+
+                @foreach (var warning in result.Warnings)
+                {
+                    <p class="result-warning">@warning</p>
+                }
+            }
+        </div>
+    </section>
+</div>
+
+@code {
+    private readonly VisualizerForm form = new()
+    {
+        ProductId = "gid://shopify/Product/demo",
+        ProductTitle = "Sample bridal gown",
+        Prompt = "Keep the gown faithful to the product image, realistic fabric drape, natural boutique lighting."
+    };
+
+    private IBrowserFile? customerImage;
+    private GownVisualizationResult? result;
+    private string? errorMessage;
+    private bool isBusy;
+
+    private AiVisualizerOptions Options => VisualizerOptions.Value;
+
+    private string AcceptAttribute => string.Join(",", Options.AllowedImageContentTypes);
+
+    private string AllowedTypesLabel => string.Join(", ", Options.AllowedImageContentTypes);
+
+    private long MaxUploadMegabytes => Options.MaxUploadBytes / 1024 / 1024;
+
+    private string SelectedFileName => customerImage?.Name ?? "Choose a customer photo";
+
+    private bool CanCreatePreview =>
+        !isBusy &&
+        customerImage is not null &&
+        !string.IsNullOrWhiteSpace(form.ProductId) &&
+        !string.IsNullOrWhiteSpace(form.ProductTitle);
+
+    private void OnCustomerImageSelected(InputFileChangeEventArgs args)
+    {
+        customerImage = args.File;
+        result = null;
+        ValidateSelectedImage();
+    }
+
+    private async Task CreatePreviewAsync()
+    {
+        if (customerImage is null || !ValidateSelectedImage())
+        {
+            return;
+        }
+
+        isBusy = true;
+        errorMessage = null;
+
+        try
+        {
+            var request = new GownVisualizationRequest(
+                ProductId: form.ProductId,
+                ProductTitle: form.ProductTitle,
+                CustomerImageFileName: customerImage.Name,
+                CustomerImageContentType: customerImage.ContentType,
+                GarmentImageUrl: TryCreateUri(form.GarmentImageUrl),
+                Prompt: form.Prompt);
+
+            result = await VisualizationService.CreatePreviewAsync(request);
+        }
+        finally
+        {
+            isBusy = false;
+        }
+    }
+
+    private bool ValidateSelectedImage()
+    {
+        errorMessage = null;
+
+        if (customerImage is null)
+        {
+            errorMessage = "Select a customer photo before generating a preview.";
+            return false;
+        }
+
+        if (!Options.AllowedImageContentTypes.Contains(customerImage.ContentType, StringComparer.OrdinalIgnoreCase))
+        {
+            errorMessage = $"Unsupported image type: {customerImage.ContentType}.";
+            return false;
+        }
+
+        if (customerImage.Size > Options.MaxUploadBytes)
+        {
+            errorMessage = $"The selected image is too large. Maximum size is {MaxUploadMegabytes} MB.";
+            return false;
+        }
+
+        return true;
+    }
+
+    private static Uri? TryCreateUri(string? value) =>
+        Uri.TryCreate(value, UriKind.Absolute, out var uri) ? uri : null;
+
+    private sealed class VisualizerForm
+    {
+        public string ProductId { get; set; } = string.Empty;
+
+        public string ProductTitle { get; set; } = string.Empty;
+
+        public string? GarmentImageUrl { get; set; }
+
+        public string? Prompt { get; set; }
+    }
+}
