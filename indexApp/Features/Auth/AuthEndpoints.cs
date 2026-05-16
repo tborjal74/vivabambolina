@@ -34,6 +34,7 @@ public static class AuthEndpoints
 
         group.MapPost("/session-login", async (
             [FromForm] LoginRequest request,
+            [FromQuery] string? returnUrl,
             AuthService authService,
             HttpContext httpContext,
             CancellationToken cancellationToken) =>
@@ -49,7 +50,7 @@ public static class AuthEndpoints
                 AdminSessionAuth.CreatePrincipal(result.UserId, result.Email, result.Role),
                 AdminSessionAuth.CreateProperties(request.RememberDevice));
 
-            return Results.Redirect("/");
+            return Results.Redirect(GetSafeReturnUrl(returnUrl));
         }).DisableAntiforgery();
 
         group.MapGet("/me", (HttpContext httpContext) =>
@@ -132,5 +133,18 @@ public static class AuthEndpoints
         });
 
         return endpoints;
+    }
+
+    private static string GetSafeReturnUrl(string? returnUrl)
+    {
+        if (string.IsNullOrWhiteSpace(returnUrl))
+        {
+            return "/";
+        }
+
+        return Uri.TryCreate(returnUrl, UriKind.Relative, out _)
+            && !returnUrl.StartsWith("//", StringComparison.Ordinal)
+            ? returnUrl
+            : "/";
     }
 }

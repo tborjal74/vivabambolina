@@ -38,7 +38,7 @@
             <p>Use your staff credentials to continue.</p>
         </div>
 
-        <form method="post" action="/api/auth/session-login">
+        <form method="post" action="@LoginAction">
             <div class="form-stack">
                 <label>
                     Staff email
@@ -65,7 +65,7 @@
                 }
 
                 <button class="btn btn-primary login-button" type="submit">
-                    Sign in to visualizer
+                    Sign In
                 </button>
             </div>
         </form>
@@ -78,6 +78,13 @@
 
     [SupplyParameterFromQuery(Name = "loggedOut")]
     private string? LoggedOut { get; set; }
+
+    [SupplyParameterFromQuery(Name = "returnUrl")]
+    private string? ReturnUrl { get; set; }
+
+    private string LoginAction => string.IsNullOrWhiteSpace(ReturnUrl)
+        ? "/api/auth/session-login"
+        : $"/api/auth/session-login?returnUrl={Uri.EscapeDataString(ReturnUrl)}";
 
     private string? statusMessage => Error switch
     {
