@@ -5,19 +5,11 @@
 <PageTitle>Viva Bambolina Home</PageTitle>
 
 <div class="home-shell">
-    <header class="store-nav" aria-label="Store navigation">
+    <header class="store-nav" aria-label="Store header">
+        <div aria-hidden="true"></div>
         <a class="wordmark" href="">Viva Bambolina</a>
 
-        <nav>
-            <a class="active" href="">Home</a>
-            <a href="#">Shop</a>
-            <a href="#">Custom Gowns</a>
-            <a href="#">About Us</a>
-            <a href="#">Contact</a>
-        </nav>
-
         <div class="nav-actions" aria-label="Account actions">
-            <button type="button" title="Search">⌕</button>
             <AuthorizeView>
                 <Authorized Context="authState">
                     <div class="admin-session">
@@ -31,10 +23,6 @@
                     <a class="account-link" href="admin/login" title="Account">Sign in</a>
                 </NotAuthorized>
             </AuthorizeView>
-            <button type="button" class="bag-button" title="Cart">
-                ♧
-                <span>2</span>
-            </button>
         </div>
     </header>
 
@@ -166,7 +154,6 @@
                     <span>@quantity</span>
                     <button type="button" @onclick="IncreaseQuantity">+</button>
                 </div>
-                <button type="button" class="cart-button">Add to Cart</button>
                 <button type="button" class="outline-button">Buy It Now</button>
             </div>
 

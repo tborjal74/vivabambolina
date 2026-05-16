@@ -187,5 +187,5 @@ C:\Users\pc\Downloads\Projects\vivabambolina\indexApp\bin\Debug\net10.0\zh-Hans\
 C:\Users\pc\Downloads\Projects\vivabambolina\indexApp\bin\Debug\net10.0\zh-Hant\Microsoft.CodeAnalysis.Workspaces.MSBuild.resources.dll
 C:\Users\pc\Downloads\Projects\vivabambolina\indexApp\obj\Debug\net10.0\indexApp.csproj.AssemblyReference.cache
 C:\Users\pc\Downloads\Projects\vivabambolina\indexApp\obj\Debug\net10.0\indexApp.csproj.Up2Date
-C:\Users\pc\Downloads\Projects\vivabambolina\indexApp\obj\Debug\net10.0\compressed\mkkjbk5ro0-{0}-r4l1fjhy8w-r4l1fjhy8w.gz
-C:\Users\pc\Downloads\Projects\vivabambolina\indexApp\obj\Debug\net10.0\compressed\tzr6hlo93m-{0}-r4l1fjhy8w-r4l1fjhy8w.gz
+C:\Users\pc\Downloads\Projects\vivabambolina\indexApp\obj\Debug\net10.0\compressed\mkkjbk5ro0-{0}-5ug1u95owi-5ug1u95owi.gz
+C:\Users\pc\Downloads\Projects\vivabambolina\indexApp\obj\Debug\net10.0\compressed\tzr6hlo93m-{0}-5ug1u95owi-5ug1u95owi.gz

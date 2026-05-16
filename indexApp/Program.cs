@@ -21,7 +21,7 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddOptions<AiVisualizerOptions>()
     .Bind(builder.Configuration.GetSection(AiVisualizerOptions.SectionName))
     .Validate(options => options.MaxUploadBytes > 0, "Visualizer uploads must allow at least one byte.")
-    .Validate(options => options.AllowedImageContentTypes.Length > 0, "At least one image content type must be allowed.");
+    .Validate(options => options.AllowedImageContentTypes.Length > 0, "At least one image content type must be allowed."); 
 
 builder.Services.AddOptions<ShopifyOptions>()
     .Bind(builder.Configuration.GetSection(ShopifyOptions.SectionName));

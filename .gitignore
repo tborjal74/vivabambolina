@@ -1,0 +1,57 @@
+# Build output
+bin/
+obj/
+[Bb]in/
+[Oo]bj/
+
+# User-specific IDE files
+.vs/
+.vscode/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Rider / JetBrains
+.idea/
+*.sln.iml
+
+# Visual Studio Code local settings, keep shared recommendations if added later
+!.vscode/extensions.json
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+
+# .NET generated files
+*.nupkg
+*.snupkg
+*.binlog
+TestResults/
+coverage/
+coverage.*
+*.coverage
+*.coveragexml
+
+# Local caches and logs
+*.log
+*.lscache
+*.cache
+*.tmp
+*.temp
+
+# Local environment and secrets
+.env
+.env.*
+!.env.example
+appsettings.Local.json
+appsettings.*.Local.json
+secrets.json
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Publish artifacts
+publish/
+artifacts/
