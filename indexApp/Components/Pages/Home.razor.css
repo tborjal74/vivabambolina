@@ -31,6 +31,7 @@
 
 .store-nav nav a,
 .nav-actions button,
+.account-link,
 .selection-card button {
     color: #171313;
     border: 0;
@@ -55,13 +56,51 @@
     gap: .75rem;
 }
 
-.nav-actions button {
+.nav-actions button,
+.account-link {
     position: relative;
     display: grid;
     place-items: center;
-    width: 2rem;
+    min-width: 2rem;
     height: 2rem;
     font-size: 1.25rem;
+}
+
+.account-link {
+    padding: 0 .65rem;
+    border: 1px solid #d8ccc8;
+    border-radius: 4px;
+    font-size: .72rem;
+}
+
+.admin-session {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    color: #4d4240;
+    font-size: .76rem;
+    font-weight: 800;
+}
+
+.admin-session span {
+    max-width: 12rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.admin-session form {
+    margin: 0;
+}
+
+.admin-session button {
+    width: auto;
+    padding: 0 .7rem;
+    border: 1px solid #171313;
+    border-radius: 4px;
+    background: #171313;
+    color: #fff;
+    font-size: .72rem;
 }
 
 .bag-button span {

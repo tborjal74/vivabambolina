@@ -1,7 +1,6 @@
 @page "/admin/login"
 @layout AuthLayout
 @rendermode InteractiveServer
-@inject NavigationManager Navigation
 
 <PageTitle>Admin Login</PageTitle>
 
@@ -39,30 +38,26 @@
             <p>Use your staff credentials to continue.</p>
         </div>
 
-        <EditForm Model="loginModel" OnValidSubmit="SubmitAsync">
-            <DataAnnotationsValidator />
-
+        <form method="post" action="/api/auth/session-login">
             <div class="form-stack">
                 <label>
                     Staff email
-                    <InputText class="form-control" @bind-Value="loginModel.Email" autocomplete="username" placeholder="admin@vivabambolina.com" />
+                    <input class="form-control" name="Email" type="email" autocomplete="username" value="admin@vivabambolina.com" placeholder="admin@vivabambolina.com" required />
                 </label>
 
                 <label>
                     Password
-                    <InputText class="form-control" @bind-Value="loginModel.Password" type="password" autocomplete="current-password" placeholder="Enter password" />
+                    <input class="form-control" name="Password" type="password" autocomplete="current-password" placeholder="Enter password" minlength="8" required />
                 </label>
 
                 <div class="login-row">
                     <label class="check-row">
-                        <InputCheckbox @bind-Value="loginModel.RememberDevice" />
+                        <input name="RememberDevice" type="checkbox" value="true" checked />
                         <span>Remember this device</span>
                     </label>
 
                     <a href="mailto:admin@vivabambolina.com">Need access?</a>
                 </div>
-
-                <ValidationSummary />
 
                 @if (!string.IsNullOrWhiteSpace(statusMessage))
                 {
@@ -72,36 +67,25 @@
                 <button class="btn btn-primary login-button" type="submit">
                     Sign in to visualizer
                 </button>
+
+                <a class="oauth-button" href="/api/auth/oauth/challenge">Continue with OAuth</a>
             </div>
-        </EditForm>
+        </form>
     </div>
 </section>
 
 @code {
-    private readonly LoginModel loginModel = new()
+    [SupplyParameterFromQuery(Name = "error")]
+    private string? Error { get; set; }
+
+    [SupplyParameterFromQuery(Name = "loggedOut")]
+    private string? LoggedOut { get; set; }
+
+    private string? statusMessage => Error switch
     {
-        Email = "admin@vivabambolina.com"
+        "invalid" => "Those credentials did not match an active admin account.",
+        "oauth" => "OAuth completed, but the account is not linked to an active admin user.",
+        _ when LoggedOut == "1" => "You have been signed out.",
+        _ => null
     };
-
-    private string? statusMessage;
-
-    private async Task SubmitAsync()
-    {
-        statusMessage = "Frontend login shell ready. Authentication service will be connected next.";
-        await Task.Delay(350);
-        Navigation.NavigateTo("/");
-    }
-
-    private sealed class LoginModel
-    {
-        [System.ComponentModel.DataAnnotations.Required]
-        [System.ComponentModel.DataAnnotations.EmailAddress]
-        public string Email { get; set; } = string.Empty;
-
-        [System.ComponentModel.DataAnnotations.Required]
-        [System.ComponentModel.DataAnnotations.MinLength(8)]
-        public string Password { get; set; } = string.Empty;
-
-        public bool RememberDevice { get; set; } = true;
-    }
 }
