@@ -1,0 +1,57 @@
+@page "/visualizer/history"
+@attribute [Authorize]
+@rendermode InteractiveServer
+@using System.Security.Claims
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject VisualizerService VisualizerService
+
+<PageTitle>Preview History</PageTitle>
+
+<main class="history-page">
+    <header>
+        <a href="/visualizer">Back to visualizer</a>
+        <h1>Preview History</h1>
+        <p>Your generated previews are private to your account.</p>
+    </header>
+
+    @if (isLoading)
+    {
+        <p class="empty-state">Loading history...</p>
+    }
+    else if (items.Count == 0)
+    {
+        <p class="empty-state">No generated previews yet.</p>
+    }
+    else
+    {
+        <section class="history-grid" aria-label="Generated previews">
+            @foreach (var item in items)
+            {
+                <article class="history-card">
+                    <img src="@item.ImageUrl" alt="Generated gown preview" />
+                    <div>
+                        <h2>@item.StyleName</h2>
+                        <p>@item.FabricName · @item.ColorName</p>
+                        <small>@item.CreatedAt.ToLocalTime().ToString("g")</small>
+                        <a href="@item.ImageUrl" download>Download</a>
+                    </div>
+                </article>
+            }
+        </section>
+    }
+</main>
+
+@code {
+    private IReadOnlyList<PreviewHistoryItemDto> items = [];
+    private bool isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var state = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var userId = state.User.FindFirstValue(ClaimTypes.NameIdentifier)
+            ?? throw new InvalidOperationException("You must be signed in to view history.");
+
+        items = await VisualizerService.GetHistoryAsync(userId);
+        isLoading = false;
+    }
+}

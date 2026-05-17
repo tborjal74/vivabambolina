@@ -2,6 +2,7 @@ using indexApp.Components;
 using indexApp.Features.Auth;
 using indexApp.Features.Auth.Data;
 using indexApp.Features.AiVisualizer;
+using indexApp.Features.AiVisualizer.Data;
 using indexApp.Features.AiVisualizer.Services;
 using indexApp.Features.Shopify;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -21,7 +22,8 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddOptions<AiVisualizerOptions>()
     .Bind(builder.Configuration.GetSection(AiVisualizerOptions.SectionName))
     .Validate(options => options.MaxUploadBytes > 0, "Visualizer uploads must allow at least one byte.")
-    .Validate(options => options.AllowedImageContentTypes.Length > 0, "At least one image content type must be allowed."); 
+    .Validate(options => options.AllowedImageContentTypes.Length > 0, "At least one image content type must be allowed.")
+    .Validate(options => options.MaxAiPreviewsPerUserPerDay > 0, "AI preview limit must be positive.");
 
 builder.Services.AddOptions<ShopifyOptions>()
     .Bind(builder.Configuration.GetSection(ShopifyOptions.SectionName));
@@ -33,6 +35,8 @@ builder.Services.AddOptions<AuthOptions>()
     .Validate(options => options.Jwt.ExpirationMinutes > 0, "Auth:Jwt:ExpirationMinutes must be positive.");
 
 builder.Services.AddDbContext<AuthDbContext>(options =>
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+builder.Services.AddDbContext<AiVisualizerDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 var authOptions = builder.Configuration.GetSection(AuthOptions.SectionName).Get<AuthOptions>() ?? new AuthOptions();
@@ -83,7 +87,21 @@ builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<AuthSeeder>();
 builder.Services.AddSingleton<IJwtTokenService, JwtTokenService>();
 builder.Services.AddSingleton<IPasswordHasher, BcryptPasswordHasher>();
-builder.Services.AddScoped<IGownVisualizationService, StubGownVisualizationService>();
+builder.Services.AddScoped<AiVisualizerSeeder>();
+builder.Services.AddScoped<VisualizerService>();
+builder.Services.AddScoped<MeasurementService>();
+builder.Services.AddScoped<PromptBuilder>();
+builder.Services.AddScoped<FileStorageService>();
+builder.Services.AddScoped<UsageLimitService>();
+builder.Services.AddHttpClient<OpenAiGownVisualizationService>();
+builder.Services.AddScoped<StubGownVisualizationService>();
+builder.Services.AddScoped<IGownVisualizationService>(serviceProvider =>
+{
+    var options = serviceProvider.GetRequiredService<Microsoft.Extensions.Options.IOptions<AiVisualizerOptions>>().Value;
+    return string.Equals(options.Provider, "OpenAI", StringComparison.OrdinalIgnoreCase)
+        ? serviceProvider.GetRequiredService<OpenAiGownVisualizationService>()
+        : serviceProvider.GetRequiredService<StubGownVisualizationService>();
+});
 
 var app = builder.Build();
 using (var scope = app.Services.CreateScope())
@@ -91,6 +109,7 @@ using (var scope = app.Services.CreateScope())
     try
     {
         await scope.ServiceProvider.GetRequiredService<AuthSeeder>().SeedAsync();
+        await scope.ServiceProvider.GetRequiredService<AiVisualizerSeeder>().SeedAsync();
     }
     catch (Exception ex)
     {
@@ -118,6 +137,7 @@ app.UseAntiforgery();
 
 app.MapStaticAssets();
 app.MapAuthEndpoints();
+app.MapVisualizerEndpoints();
 app.MapRazorComponents<indexApp.Components.App>()
     .AddInteractiveServerRenderMode();
 

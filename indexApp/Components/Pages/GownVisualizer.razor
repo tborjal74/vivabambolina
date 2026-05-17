@@ -1,207 +1,278 @@
+@page "/visualizer"
 @page "/ai-visualizer"
+@attribute [Authorize]
 @rendermode InteractiveServer
-@using Microsoft.Extensions.Options
-@inject IGownVisualizationService VisualizationService
-@inject IOptions<AiVisualizerOptions> VisualizerOptions
+@using System.Security.Claims
+@using indexApp.Features.AiVisualizer.Entities
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject FileStorageService FileStorageService
+@inject MeasurementService MeasurementService
+@inject VisualizerService VisualizerService
 
 <PageTitle>AI Gown Visualizer</PageTitle>
 
 <div class="visualizer-page">
-    <section class="visualizer-header">
-        <div>
-            <p class="eyebrow">Shopify AI feature foundation</p>
-            <h1>AI Gown Visualizer</h1>
-            <p class="lead">
-                Upload a customer reference photo, connect it to a Shopify gown, and generate a preview through the configured image provider.
-            </p>
-        </div>
-        <div class="provider-status">
-            <span>Provider</span>
-            <strong>@Options.Provider</strong>
-        </div>
-    </section>
+    <header class="visualizer-topbar">
+        <a class="wordmark" href="/">Viva Bambolina</a>
+        <a class="history-link" href="/visualizer/history">Preview history</a>
+    </header>
 
-    <section class="visualizer-workspace">
-        <div class="setup-panel">
-            <h2>Preview Request</h2>
-
-            <div class="field-grid">
-                <label>
-                    Shopify product ID
-                    <input class="form-control" @bind="form.ProductId" placeholder="gid://shopify/Product/..." />
-                </label>
-
-                <label>
-                    Product title
-                    <input class="form-control" @bind="form.ProductTitle" placeholder="Ivory satin ball gown" />
-                </label>
-
-                <label>
-                    Product image URL
-                    <input class="form-control" @bind="form.GarmentImageUrl" placeholder="https://cdn.shopify.com/..." />
-                </label>
-
-                <label>
-                    Styling prompt
-                    <textarea class="form-control" @bind="form.Prompt" rows="4" placeholder="Keep gown shape accurate, natural lighting, boutique fitting room."></textarea>
-                </label>
-            </div>
-
-            <div class="upload-zone">
-                <InputFile OnChange="OnCustomerImageSelected" accept="@AcceptAttribute" />
-                <div>
-                    <strong>@SelectedFileName</strong>
-                    <span>Accepted: @AllowedTypesLabel. Limit: @MaxUploadMegabytes MB.</span>
-                </div>
-            </div>
-
-            @if (!string.IsNullOrWhiteSpace(errorMessage))
+    <main class="visualizer-shell">
+        <aside class="stepper" aria-label="Visualizer steps">
+            @foreach (var step in steps)
             {
-                <div class="alert alert-warning" role="alert">@errorMessage</div>
+                <button type="button" class="@(activeStep == step.Number ? "active" : null)" @onclick="() => activeStep = step.Number">
+                    <span>@step.Number</span>
+                    <strong>@step.Title</strong>
+                    <small>@step.Description</small>
+                </button>
             }
+        </aside>
 
-            <button class="btn btn-primary" @onclick="CreatePreviewAsync" disabled="@(!CanCreatePreview)">
-                @(isBusy ? "Generating..." : "Generate preview")
-            </button>
-        </div>
+        <section class="configuration-panel" aria-label="Visualizer configuration">
+            <div class="panel-heading">
+                <p class="eyebrow">Guided visualizer</p>
+                <h1>@SelectedStyle?.Name</h1>
+                <strong>@((SelectedStyle?.BasePrice ?? 0).ToString("C0"))</strong>
+            </div>
 
-        <div class="result-panel">
-            <h2>Result</h2>
-
-            @if (result is null)
+            @if (isLoading)
             {
-                <div class="empty-result">
-                    <img src="images/visualizer-placeholder.svg" alt="AI visualizer placeholder" />
-                    <p>No preview generated yet.</p>
-                </div>
+                <p class="surface-message">Loading visualizer catalog...</p>
             }
             else
             {
-                <img class="preview-image" src="@result.PreviewImageUrl" alt="Generated gown visualization preview" />
-                <dl class="result-meta">
-                    <div>
-                        <dt>Status</dt>
-                        <dd>@result.Status</dd>
-                    </div>
-                    <div>
-                        <dt>Job ID</dt>
-                        <dd>@result.JobId</dd>
-                    </div>
-                    <div>
-                        <dt>Created</dt>
-                        <dd>@result.CreatedAt.ToLocalTime().ToString("g")</dd>
-                    </div>
-                </dl>
+                <div class="field-block">
+                    <label for="style">1. Style &amp; Design</label>
+                    <select id="style" class="form-control" @bind="selectedStyleId">
+                        @foreach (var style in styles)
+                        {
+                            <option value="@style.Id">@style.Name</option>
+                        }
+                    </select>
+                    <small>@SelectedStyle?.Description</small>
+                </div>
 
-                @foreach (var warning in result.Warnings)
+                <div class="field-block">
+                    <label for="fabric">2. Fabric</label>
+                    <select id="fabric" class="form-control" @bind="selectedFabricId">
+                        @foreach (var fabric in fabrics)
+                        {
+                            <option value="@fabric.Id">@fabric.Name</option>
+                        }
+                    </select>
+
+                    <div class="swatches" aria-label="Fabric colors">
+                        @foreach (var color in SelectedFabric?.Colors ?? [])
+                        {
+                            <button type="button"
+                                    class="@(selectedColorId == color.Id ? "selected" : null)"
+                                    style="background:@color.HexCode"
+                                    title="@color.ColorName"
+                                    @onclick="() => selectedColorId = color.Id"></button>
+                        }
+                    </div>
+                </div>
+
+                <EditForm Model="measurements">
+                    <DataAnnotationsValidator />
+                    <div class="field-block">
+                        <label>3. Measurements <small>(inches)</small></label>
+                        <div class="measurement-grid">
+                            <label>Height <InputNumber class="form-control" @bind-Value="measurements.Height" /></label>
+                            <label>Bust <InputNumber class="form-control" @bind-Value="measurements.Bust" /></label>
+                            <label>Waist <InputNumber class="form-control" @bind-Value="measurements.Waist" /></label>
+                            <label>Hips <InputNumber class="form-control" @bind-Value="measurements.Hips" /></label>
+                            <label>Shoulder <InputNumber class="form-control" @bind-Value="measurements.ShoulderWidth" /></label>
+                            <label>Dress length <InputNumber class="form-control" @bind-Value="measurements.DressLength" /></label>
+                            <label>Sleeve length <InputNumber class="form-control" @bind-Value="measurements.SleeveLength" /></label>
+                            <label>Wrist <InputNumber class="form-control" @bind-Value="measurements.Wrist" /></label>
+                        </div>
+                        <ValidationSummary />
+                    </div>
+                </EditForm>
+
+                <div class="upload-card">
+                    <InputFile OnChange="OnPhotoSelected" accept="image/jpeg,image/png,image/webp" />
+                    <div>
+                        <strong>@(photoFile?.Name ?? "Optional front-facing reference photo")</strong>
+                        <small>JPG, PNG, or WebP up to 10MB.</small>
+                    </div>
+                </div>
+
+                @if (messages.Count > 0)
                 {
-                    <p class="result-warning">@warning</p>
+                    <div class="alert-list" role="status">
+                        @foreach (var message in messages)
+                        {
+                            <p>@message</p>
+                        }
+                    </div>
                 }
+
+                <button type="button" class="generate-button" disabled="@isGenerating" @onclick="GeneratePreviewAsync">
+                    @(isGenerating ? "Generating AI preview..." : "Generate AI Preview")
+                </button>
             }
-        </div>
-    </section>
+        </section>
+
+        <section class="preview-panel" aria-label="Visualizer preview">
+            <div class="preview-header">
+                <div>
+                    <p class="eyebrow">Basic Preview</p>
+                    <h2>Mannequin approximation</h2>
+                    <p>Updates instantly without an AI call.</p>
+                </div>
+            </div>
+
+            <div class="mannequin-stage" style="@PreviewCss">
+                <div class="mannequin">
+                    <div class="head"></div>
+                    <div class="shoulders"></div>
+                    <div class="bodice"></div>
+                    <div class="sleeve left"></div>
+                    <div class="sleeve right"></div>
+                    <div class="skirt"></div>
+                </div>
+            </div>
+
+            <div class="ai-output">
+                <div>
+                    <p class="eyebrow">AI Generated Preview</p>
+                    <h2>@(latestPreviewUrl is null ? "No AI preview yet" : "Preview ready")</h2>
+                    <p>AI previews are for visualization purposes only. Final gown fit, fabric behavior, color, and appearance may vary.</p>
+                </div>
+
+                @if (latestPreviewUrl is not null)
+                {
+                    <img src="@latestPreviewUrl" alt="Generated AI gown preview" />
+                    <a class="download-button" href="@latestPreviewUrl" download>Download Image</a>
+                }
+            </div>
+        </section>
+    </main>
 </div>
 
 @code {
-    private readonly VisualizerForm form = new()
+    private readonly Step[] steps =
+    [
+        new(1, "Style & Design", "Choose gown silhouette"),
+        new(2, "Fabric & Color", "Pick fabric and swatch"),
+        new(3, "Measurements", "Enter fitting values"),
+        new(4, "Upload Photo", "Optional reference"),
+        new(5, "AI Preview", "Generate result")
+    ];
+
+    private IReadOnlyList<DressStyleDto> styles = [];
+    private IReadOnlyList<FabricDto> fabrics = [];
+    private readonly MeasurementDto measurements = new();
+    private readonly List<string> messages = [];
+    private Guid selectedStyleId;
+    private Guid selectedFabricId;
+    private Guid selectedColorId;
+    private IBrowserFile? photoFile;
+    private string? latestPreviewUrl;
+    private int activeStep = 1;
+    private bool isLoading = true;
+    private bool isGenerating;
+
+    private DressStyleDto? SelectedStyle => styles.FirstOrDefault(style => style.Id == selectedStyleId);
+
+    private FabricDto? SelectedFabric => fabrics.FirstOrDefault(fabric => fabric.Id == selectedFabricId);
+
+    private FabricColorDto? SelectedColor => SelectedFabric?.Colors.FirstOrDefault(color => color.Id == selectedColorId);
+
+    private string PreviewCss
     {
-        ProductId = "gid://shopify/Product/demo",
-        ProductTitle = "Sample bridal gown",
-        Prompt = "Keep the gown faithful to the product image, realistic fabric drape, natural boutique lighting."
-    };
-
-    private IBrowserFile? customerImage;
-    private GownVisualizationResult? result;
-    private string? errorMessage;
-    private bool isBusy;
-
-    private AiVisualizerOptions Options => VisualizerOptions.Value;
-
-    private string AcceptAttribute => string.Join(",", Options.AllowedImageContentTypes);
-
-    private string AllowedTypesLabel => string.Join(", ", Options.AllowedImageContentTypes);
-
-    private long MaxUploadMegabytes => Options.MaxUploadBytes / 1024 / 1024;
-
-    private string SelectedFileName => customerImage?.Name ?? "Choose a customer photo";
-
-    private bool CanCreatePreview =>
-        !isBusy &&
-        customerImage is not null &&
-        !string.IsNullOrWhiteSpace(form.ProductId) &&
-        !string.IsNullOrWhiteSpace(form.ProductTitle);
-
-    private void OnCustomerImageSelected(InputFileChangeEventArgs args)
-    {
-        customerImage = args.File;
-        result = null;
-        ValidateSelectedImage();
+        get
+        {
+            var scale = MeasurementService.GetScale(measurements);
+            return $"--gown-color:{SelectedColor?.HexCode ?? "#f1cfc3"};--height:{1 + scale.Height};--bust:{1 + scale.Bust};--waist:{1 + scale.Waist};--hips:{1 + scale.Hips};--shoulder:{1 + scale.Shoulder};--dress-length:{1 + scale.DressLength};--sleeve:{scale.SleeveLength};--wrist:{1 + scale.Wrist};";
+        }
     }
 
-    private async Task CreatePreviewAsync()
+    protected override async Task OnInitializedAsync()
     {
-        if (customerImage is null || !ValidateSelectedImage())
+        styles = await VisualizerService.GetStylesAsync();
+        fabrics = await VisualizerService.GetFabricsAsync();
+        selectedStyleId = styles.FirstOrDefault()?.Id ?? Guid.Empty;
+        selectedFabricId = fabrics.FirstOrDefault()?.Id ?? Guid.Empty;
+        selectedColorId = fabrics.FirstOrDefault()?.Colors.FirstOrDefault()?.Id ?? Guid.Empty;
+        isLoading = false;
+    }
+
+    private void OnPhotoSelected(InputFileChangeEventArgs args)
+    {
+        photoFile = args.File;
+        activeStep = 4;
+        messages.Clear();
+        if (photoFile.Size > 10 * 1024 * 1024)
         {
+            messages.Add("The selected image is too large. Maximum size is 10MB.");
+        }
+    }
+
+    private async Task GeneratePreviewAsync()
+    {
+        messages.Clear();
+        latestPreviewUrl = null;
+        activeStep = 5;
+
+        var errors = MeasurementService.Validate(measurements);
+        if (errors.Count > 0)
+        {
+            messages.AddRange(errors);
             return;
         }
 
-        isBusy = true;
-        errorMessage = null;
+        if (selectedStyleId == Guid.Empty || selectedFabricId == Guid.Empty || selectedColorId == Guid.Empty)
+        {
+            messages.Add("Choose a style, fabric, and color before generating.");
+            return;
+        }
+
+        isGenerating = true;
 
         try
         {
-            var request = new GownVisualizationRequest(
-                ProductId: form.ProductId,
-                ProductTitle: form.ProductTitle,
-                CustomerImageFileName: customerImage.Name,
-                CustomerImageContentType: customerImage.ContentType,
-                GarmentImageUrl: TryCreateUri(form.GarmentImageUrl),
-                Prompt: form.Prompt);
+            var userId = await GetUserIdAsync();
+            var uploadedPhotoUrl = photoFile is null ? null : await FileStorageService.SaveUploadAsync(photoFile, userId);
+            var request = await VisualizerService.CreateRequestAsync(
+                userId,
+                new CreateVisualizerRequestDto
+                {
+                    DressStyleId = selectedStyleId,
+                    FabricId = selectedFabricId,
+                    FabricColorId = selectedColorId,
+                    Measurement = measurements
+                },
+                uploadedPhotoUrl);
 
-            result = await VisualizationService.CreatePreviewAsync(request);
+            var result = await VisualizerService.GenerateAiPreviewAsync(
+                userId,
+                new GenerateAiPreviewRequest(request.Id, "standard", "1024x1024"));
+
+            if (result.ImageUrl is null)
+            {
+                messages.Add(result.ErrorMessage ?? "AI preview generation failed.");
+                return;
+            }
+
+            latestPreviewUrl = result.ImageUrl;
+            messages.Add("AI preview generated and saved to your history.");
         }
         finally
         {
-            isBusy = false;
+            isGenerating = false;
         }
     }
 
-    private bool ValidateSelectedImage()
+    private async Task<string> GetUserIdAsync()
     {
-        errorMessage = null;
-
-        if (customerImage is null)
-        {
-            errorMessage = "Select a customer photo before generating a preview.";
-            return false;
-        }
-
-        if (!Options.AllowedImageContentTypes.Contains(customerImage.ContentType, StringComparer.OrdinalIgnoreCase))
-        {
-            errorMessage = $"Unsupported image type: {customerImage.ContentType}.";
-            return false;
-        }
-
-        if (customerImage.Size > Options.MaxUploadBytes)
-        {
-            errorMessage = $"The selected image is too large. Maximum size is {MaxUploadMegabytes} MB.";
-            return false;
-        }
-
-        return true;
+        var state = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        return state.User.FindFirstValue(ClaimTypes.NameIdentifier)
+            ?? throw new InvalidOperationException("You must be signed in to use the visualizer.");
     }
 
-    private static Uri? TryCreateUri(string? value) =>
-        Uri.TryCreate(value, UriKind.Absolute, out var uri) ? uri : null;
-
-    private sealed class VisualizerForm
-    {
-        public string ProductId { get; set; } = string.Empty;
-
-        public string ProductTitle { get; set; } = string.Empty;
-
-        public string? GarmentImageUrl { get; set; }
-
-        public string? Prompt { get; set; }
-    }
+    private sealed record Step(int Number, string Title, string Description);
 }

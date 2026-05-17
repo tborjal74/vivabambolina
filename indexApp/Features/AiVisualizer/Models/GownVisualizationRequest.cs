@@ -6,4 +6,6 @@ public sealed record GownVisualizationRequest(
     string CustomerImageFileName,
     string CustomerImageContentType,
     Uri? GarmentImageUrl,
-    string? Prompt);
+    string? Prompt,
+    string? ImageSize = null,
+    string? Quality = null);
