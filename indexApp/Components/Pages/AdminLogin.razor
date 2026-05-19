@@ -6,42 +6,22 @@
 
 <section class="login-page">
     <div class="brand-panel">
-        <a class="brand-mark" href="">
-            <span>VB</span>
-            <strong>Viva Bambolina</strong>
-        </a>
-
-        <div class="brand-copy">
-            <p class="eyebrow">Staff access</p>
-            <h1>AI gown visualizer admin</h1>
-            <p>
-                A private workspace for boutique staff to prepare customer gown previews, review product imagery, and manage visualizer requests.
-            </p>
-        </div>
-
-        <div class="soft-stats" aria-label="Admin workspace highlights">
-            <div>
-                <span>Role</span>
-                <strong>Admin only</strong>
-            </div>
-            <div>
-                <span>Area</span>
-                <strong>Visualizer</strong>
-            </div>
-        </div>
+        <img class="login-hero-image"
+             src="images/login-hero.png"
+             alt="Viva Bambolina bridal atelier branding" />
     </div>
 
     <div class="login-card" aria-label="Admin login form">
         <div class="login-card-header">
             <p class="eyebrow">Secure sign in</p>
             <h2>Welcome back</h2>
-            <p>Use your staff credentials to continue.</p>
+            <p>Use your credentials to continue.</p>
         </div>
 
         <form method="post" action="@LoginAction">
             <div class="form-stack">
                 <label>
-                    Staff email
+                    Email
                     <input class="form-control" name="Email" type="email" autocomplete="username" value="admin@vivabambolina.com" placeholder="admin@vivabambolina.com" required />
                 </label>
 

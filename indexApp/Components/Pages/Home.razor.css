@@ -304,7 +304,7 @@
 
 .measurement-grid {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(7rem, 1fr));
     gap: .7rem;
 }
 
@@ -318,9 +318,8 @@
 
 .upload-card {
     display: grid;
-    grid-template-columns: 1fr 4.5rem;
-    gap: .9rem;
-    align-items: center;
+    gap: .45rem;
+    min-width: 0;
     padding: .8rem;
     border: 1px dashed #cfc2bd;
     border-radius: 8px;
@@ -328,9 +327,41 @@
     text-align: center;
 }
 
-.upload-card div:first-child {
+.upload-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 5rem;
+    gap: .9rem;
+    align-items: center;
+    min-width: 0;
+}
+
+.upload-picker {
+    position: relative;
     display: grid;
     gap: .2rem;
+    align-items: center;
+    min-height: 5rem;
+    min-width: 0;
+    margin: 0;
+    text-align: left;
+    cursor: pointer;
+}
+
+::deep .file-input {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.upload-picker strong,
+.upload-picker small {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .upload-card span {
@@ -343,6 +374,7 @@
 }
 
 .mini-photo {
+    width: 5rem;
     height: 5rem;
     border-radius: 6px;
     background:
@@ -350,6 +382,51 @@
         linear-gradient(#edc8b7 0 0) center 1.8rem / 1.35rem 1.6rem no-repeat,
         linear-gradient(100deg, transparent 28%, #223c54 29% 71%, transparent 72%) center bottom / 2.25rem 2.8rem no-repeat,
         #f1e3dc;
+}
+
+.photo-thumb {
+    position: relative;
+    width: 5rem;
+    height: 5rem;
+}
+
+.uploaded-mini-photo {
+    width: 100%;
+    height: 5rem;
+    object-fit: cover;
+    background: #fff;
+}
+
+.remove-photo-button {
+    position: absolute;
+    top: .25rem;
+    right: .25rem;
+    z-index: 3;
+    display: grid;
+    place-items: center;
+    width: 1.55rem;
+    height: 1.55rem;
+    padding: 0;
+    border: 1px solid rgba(255, 255, 255, .84);
+    border-radius: 50%;
+    background: rgba(23, 19, 19, .84);
+    color: #fff;
+    font-size: 1rem;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.remove-photo-button:hover,
+.remove-photo-button:focus-visible {
+    background: #171313;
+}
+
+.validation-message {
+    margin: 0;
+    color: #a02f2f;
+    font-size: .78rem;
+    font-weight: 800;
+    text-align: left;
 }
 
 .generate-button {
@@ -457,26 +534,20 @@
     background: #ce9578;
 }
 
-.photo-source {
-    background:
-        linear-gradient(#191817 0 0) center 8rem / 5.9rem 4.5rem no-repeat,
-        linear-gradient(82deg, transparent 29%, #ce9578 30% 40%, transparent 41% 59%, #ce9578 60% 70%, transparent 71%) center 11rem / 10rem 12rem no-repeat,
-        linear-gradient(96deg, transparent 30%, #ce9578 31% 43%, transparent 44% 56%, #ce9578 57% 69%, transparent 70%) center bottom / 8rem 18rem no-repeat;
+.uploaded-photo-preview,
+.frame-placeholder {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center top;
+    border-radius: inherit;
+    background: #fff;
 }
 
-.gown-preview {
-    width: min(80%, 25rem);
-    background:
-        radial-gradient(circle at 50% 43%, rgba(255, 255, 255, .9) 0 .12rem, transparent .14rem) 0 0 / 1rem 1rem,
-        linear-gradient(135deg, transparent 26%, #e7b9ad 27% 38%, transparent 39% 61%, #e7b9ad 62% 73%, transparent 74%) center 7.2rem / 10rem 9rem no-repeat,
-        linear-gradient(93deg, transparent 16%, rgba(233, 181, 169, .92) 17% 83%, transparent 84%) center bottom / 21rem 30rem no-repeat;
-}
-
-.gown-preview::after {
-    width: 7rem;
-    height: 9rem;
-    background: linear-gradient(135deg, #efd1c8, #d89b91);
-    clip-path: polygon(18% 0, 50% 45%, 82% 0, 100% 100%, 0 100%);
+.frame-placeholder {
+    object-position: center;
 }
 
 .compare-arrow {

@@ -52,7 +52,6 @@
             <div class="product-title">
                 <p class="eyebrow">AI Visualizer</p>
                 <h1>Embellished A-Line Gown</h1>
-                <strong>$599.00</strong>
             </div>
 
             <div class="settings-card">
@@ -107,12 +106,34 @@
                 </div>
 
                 <div class="upload-card">
-                    <div>
+                    <div class="upload-row">
+                    <label class="upload-picker" for="photo-upload">
+                        <InputFile class="file-input"
+                                   id="photo-upload"
+                                   OnChange="OnPhotoSelected"
+                                   accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" />
                         <span>☁</span>
-                        <strong>Upload front-facing full body photo</strong>
-                        <small>JPG, PNG up to 10MB</small>
+                        <strong title="@uploadedPhotoFileName">@(uploadedPhotoFileName ?? "Upload Self Photo")</strong>
+                        <small>JPG, PNG, or WEBP up to 10MB</small>
+                    </label>
+                    <div class="photo-thumb">
+                    @if (uploadedPhotoDataUrl is null)
+                    {
+                        <div class="mini-photo" aria-hidden="true"></div>
+                    }
+                    else
+                    {
+                        <img class="mini-photo uploaded-mini-photo" src="@uploadedPhotoDataUrl" alt="Selected photo preview" />
+                        <button type="button" class="remove-photo-button" title="Remove photo" aria-label="Remove Uploaded Self Photo" @onclick="RemoveUploadedPhoto">
+                            &times;
+                        </button>
+                    }
                     </div>
-                    <div class="mini-photo" aria-hidden="true"></div>
+                    </div>
+                    @if (!string.IsNullOrWhiteSpace(photoUploadError))
+                    {
+                        <p class="validation-message" role="alert">@photoUploadError</p>
+                    }
                 </div>
 
                 <button type="button" class="generate-button">
@@ -134,12 +155,19 @@
             <div class="comparison">
                 <figure>
                     <span>Your Photo</span>
-                    <div class="person-figure photo-source" aria-hidden="true"></div>
+                    @if (uploadedPhotoDataUrl is null)
+                    {
+                        <img class="frame-placeholder" src="images/placeholders/your-photo-placeholder.png" alt="Your photo placeholder" />
+                    }
+                    else
+                    {
+                        <img class="uploaded-photo-preview" src="@uploadedPhotoDataUrl" alt="Uploaded Self Photo" />
+                    }
                 </figure>
                 <div class="compare-arrow" aria-hidden="true">→</div>
                 <figure>
                     <span>AI Preview</span>
-                    <div class="person-figure gown-preview" aria-hidden="true"></div>
+                    <img class="frame-placeholder" src="images/placeholders/ai-preview-placeholder.png" alt="AI preview placeholder" />
                 </figure>
             </div>
 
@@ -149,13 +177,11 @@
             </div>
 
             <div class="checkout-row">
-                <strong>$599.00</strong>
                 <div class="quantity-control" aria-label="Quantity">
                     <button type="button" @onclick="DecreaseQuantity">−</button>
                     <span>@quantity</span>
                     <button type="button" @onclick="IncreaseQuantity">+</button>
                 </div>
-                <button type="button" class="outline-button">Buy It Now</button>
             </div>
 
             <aside class="selection-card" aria-label="Your selections">
@@ -168,7 +194,7 @@
                     <li>Fabric: @selectedFabric</li>
                     <li>Color: @selectedColor</li>
                     <li>Measurements: 7 values entered</li>
-                    <li>Photo: Uploaded</li>
+                    <li>Photo: @(uploadedPhotoFileName is null ? "Not uploaded" : uploadedPhotoFileName)</li>
                 </ul>
             </aside>
         </section>
@@ -180,6 +206,26 @@
     private string selectedStyle = "Embellished A-Line Gown";
     private string selectedFabric = "Sequin Tulle";
     private string selectedColor = "Blush Pink";
+    private string? uploadedPhotoDataUrl;
+    private string? uploadedPhotoFileName;
+    private string? photoUploadError;
+
+    private const long MaxPhotoBytes = 10 * 1024 * 1024;
+
+    private static readonly HashSet<string> AllowedPhotoExtensions = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ".jpg",
+        ".jpeg",
+        ".png",
+        ".webp"
+    };
+
+    private static readonly HashSet<string> AllowedPhotoContentTypes = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "image/jpeg",
+        "image/png",
+        "image/webp"
+    };
 
     private readonly Step[] steps =
     [
@@ -223,6 +269,42 @@
     private void DecreaseQuantity() => quantity = Math.Max(1, quantity - 1);
 
     private void IncreaseQuantity() => quantity++;
+
+    private async Task OnPhotoSelected(InputFileChangeEventArgs args)
+    {
+        var photo = args.File;
+        var extension = Path.GetExtension(photo.Name);
+
+        uploadedPhotoDataUrl = null;
+        uploadedPhotoFileName = null;
+        photoUploadError = null;
+
+        if (!AllowedPhotoExtensions.Contains(extension) || !AllowedPhotoContentTypes.Contains(photo.ContentType))
+        {
+            photoUploadError = "Please upload a JPG, PNG, or WEBP image.";
+            return;
+        }
+
+        if (photo.Size > MaxPhotoBytes)
+        {
+            photoUploadError = "Please upload an image that is 10MB or smaller.";
+            return;
+        }
+
+        await using var stream = photo.OpenReadStream(MaxPhotoBytes);
+        using var memory = new MemoryStream();
+        await stream.CopyToAsync(memory);
+
+        uploadedPhotoFileName = photo.Name;
+        uploadedPhotoDataUrl = $"data:{photo.ContentType};base64,{Convert.ToBase64String(memory.ToArray())}";
+    }
+
+    private void RemoveUploadedPhoto()
+    {
+        uploadedPhotoDataUrl = null;
+        uploadedPhotoFileName = null;
+        photoUploadError = null;
+    }
 
     private sealed record Step(int Number, string Title, string Description);
 

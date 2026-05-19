@@ -1,42 +1,28 @@
 .login-page {
     display: grid;
-    grid-template-columns: minmax(0, .95fr) minmax(22rem, 28rem);
-    gap: clamp(2rem, 5vw, 5rem);
+    grid-template-columns: minmax(0, .88fr) minmax(22rem, 28rem);
+    gap: clamp(1.5rem, 4vw, 4rem);
     align-items: center;
     min-height: 100vh;
-    width: min(1120px, calc(100% - 2rem));
+    width: min(1320px, calc(100% - 2rem));
     margin: 0 auto;
     padding: 2rem 0;
 }
 
 .brand-panel {
     display: grid;
-    gap: 2rem;
+    min-width: 0;
 }
 
-.brand-mark {
-    display: inline-flex;
-    align-items: center;
-    gap: .75rem;
-    width: fit-content;
-    color: #46353d;
-    text-decoration: none;
-}
-
-.brand-mark span {
-    display: grid;
-    place-items: center;
-    width: 3rem;
-    height: 3rem;
-    border-radius: 50%;
-    background: #ffffff;
-    border: 1px solid #ead7df;
-    color: #9b6a7b;
-    font-weight: 800;
-}
-
-.brand-copy {
-    max-width: 38rem;
+.login-hero-image {
+    width: 100%;
+    min-height: 32rem;
+    max-height: 42rem;
+    object-fit: cover;
+    object-position: center;
+    border-radius: .5cm;
+    border: 1px solid rgba(222, 193, 205, .9);
+    box-shadow: 0 30px 70px rgba(103, 74, 92, .14);
 }
 
 .eyebrow {
@@ -48,47 +34,17 @@
     text-transform: uppercase;
 }
 
-.brand-copy h1 {
-    margin: 0;
-    color: #3f3038;
-    font-size: clamp(2.6rem, 6vw, 5.25rem);
-    line-height: .95;
-}
-
-.brand-copy p,
 .login-card-header p {
     margin: 1rem 0 0;
     color: #705e66;
     font-size: 1.05rem;
 }
 
-.soft-stats {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 12rem));
-    gap: .85rem;
-}
-
-.soft-stats div,
 .login-card {
     border: 1px solid rgba(222, 193, 205, .9);
     background: rgba(255, 255, 255, .82);
     box-shadow: 0 24px 60px rgba(103, 74, 92, .12);
     backdrop-filter: blur(18px);
-}
-
-.soft-stats div {
-    padding: 1rem;
-    border-radius: 8px;
-}
-
-.soft-stats span {
-    display: block;
-    color: #8b737c;
-    font-size: .85rem;
-}
-
-.soft-stats strong {
-    color: #46353d;
 }
 
 .login-card {
@@ -164,7 +120,9 @@
         padding-top: 1.25rem;
     }
 
-    .brand-copy h1 {
-        font-size: 2.75rem;
+    .login-hero-image {
+        min-height: 16rem;
+        max-height: 22rem;
+        border-radius: 2rem;
     }
 }
