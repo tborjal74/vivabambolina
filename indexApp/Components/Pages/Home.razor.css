@@ -4,6 +4,9 @@
 }
 
 .store-nav {
+    position: sticky;
+    top: 0;
+    z-index: 20;
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
     align-items: center;
@@ -12,6 +15,8 @@
     padding: 0 clamp(1rem, 4vw, 3.75rem);
     border-bottom: 1px solid #e9dfdc;
     background: rgba(255, 253, 251, .94);
+    box-shadow: 0 10px 24px rgba(41, 34, 31, .06);
+    backdrop-filter: blur(14px);
 }
 
 .wordmark {
