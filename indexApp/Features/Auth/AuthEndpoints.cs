@@ -1,5 +1,7 @@
 using indexApp.Features.Auth.Models;
+using indexApp.Features.AiVisualizer.Services;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using System.Security.Claims;
@@ -15,6 +17,7 @@ public static class AuthEndpoints
         group.MapPost("/login", async (
             [FromBody] LoginRequest request,
             AuthService authService,
+            VisualizerService visualizerService,
             HttpContext httpContext,
             CancellationToken cancellationToken) =>
         {
@@ -23,6 +26,8 @@ public static class AuthEndpoints
             {
                 return Results.Unauthorized();
             }
+
+            await visualizerService.DeleteUserSessionMediaAsync(result.UserId, cancellationToken);
 
             await httpContext.SignInAsync(
                 AdminSessionAuth.Scheme,
@@ -36,6 +41,7 @@ public static class AuthEndpoints
             [FromForm] LoginRequest request,
             [FromQuery] string? returnUrl,
             AuthService authService,
+            VisualizerService visualizerService,
             HttpContext httpContext,
             CancellationToken cancellationToken) =>
         {
@@ -45,13 +51,15 @@ public static class AuthEndpoints
                 return Results.Redirect("/admin/login?error=invalid");
             }
 
+            await visualizerService.DeleteUserSessionMediaAsync(result.UserId, cancellationToken);
+
             await httpContext.SignInAsync(
                 AdminSessionAuth.Scheme,
                 AdminSessionAuth.CreatePrincipal(result.UserId, result.Email, result.Role),
                 AdminSessionAuth.CreateProperties(request.RememberDevice));
 
             return Results.Redirect(GetSafeReturnUrl(returnUrl));
-        }).DisableAntiforgery();
+        });
 
         group.MapGet("/me", (HttpContext httpContext) =>
         {
@@ -81,6 +89,7 @@ public static class AuthEndpoints
         group.MapGet("/oauth/callback", async (
             HttpContext httpContext,
             AuthService authService,
+            VisualizerService visualizerService,
             CancellationToken cancellationToken) =>
         {
             var result = await httpContext.AuthenticateAsync(AdminSessionAuth.ExternalScheme);
@@ -110,6 +119,8 @@ public static class AuthEndpoints
                 return Results.Redirect("/admin/login?error=oauth");
             }
 
+            await visualizerService.DeleteUserSessionMediaAsync(adminUser.Id.ToString(), cancellationToken);
+
             await httpContext.SignInAsync(
                 AdminSessionAuth.Scheme,
                 AdminSessionAuth.CreatePrincipal(adminUser),
@@ -118,19 +129,27 @@ public static class AuthEndpoints
             return Results.Redirect("/");
         });
 
-        group.MapPost("/logout", async (HttpContext httpContext) =>
+        group.MapPost("/logout", async (
+            HttpContext httpContext,
+            IAntiforgery antiforgery,
+            VisualizerService visualizerService,
+            CancellationToken cancellationToken) =>
         {
-            await httpContext.SignOutAsync(AdminSessionAuth.Scheme);
-            await httpContext.SignOutAsync(AdminSessionAuth.ExternalScheme);
-            return Results.Redirect("/admin/login?loggedOut=1");
-        }).DisableAntiforgery();
+            if (!await antiforgery.IsRequestValidAsync(httpContext))
+            {
+                return Results.BadRequest("Invalid logout request.");
+            }
 
-        group.MapGet("/logout", async (HttpContext httpContext) =>
-        {
+            var userId = httpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!string.IsNullOrWhiteSpace(userId))
+            {
+                await visualizerService.DeleteUserSessionMediaAsync(userId, cancellationToken);
+            }
+
             await httpContext.SignOutAsync(AdminSessionAuth.Scheme);
             await httpContext.SignOutAsync(AdminSessionAuth.ExternalScheme);
             return Results.Redirect("/admin/login?loggedOut=1");
-        });
+        }).RequireAuthorization();
 
         return endpoints;
     }

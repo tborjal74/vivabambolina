@@ -176,6 +176,42 @@ public sealed class VisualizerService
         return true;
     }
 
+    public async Task DeleteUserSessionMediaAsync(
+        string userId,
+        CancellationToken cancellationToken = default)
+    {
+        var requests = await dbContext.VisualizerRequests
+            .Include(request => request.GeneratedPreviews)
+            .Where(request =>
+                request.UserId == userId &&
+                (request.UploadedPhotoUrl != null || request.GeneratedPreviews.Any()))
+            .ToListAsync(cancellationToken);
+
+        var referencesToDelete = requests
+            .SelectMany(request => request.GeneratedPreviews.Select(preview => preview.ImageUrl))
+            .Concat(requests
+                .Select(request => request.UploadedPhotoUrl)
+                .Where(reference => !string.IsNullOrWhiteSpace(reference))
+                .Cast<string>())
+            .ToList();
+
+        foreach (var request in requests)
+        {
+            request.UploadedPhotoUrl = null;
+            dbContext.GeneratedPreviews.RemoveRange(request.GeneratedPreviews);
+        }
+
+        if (requests.Count > 0)
+        {
+            await dbContext.SaveChangesAsync(cancellationToken);
+        }
+
+        foreach (var reference in referencesToDelete)
+        {
+            fileStorageService.DeletePrivateMedia(reference);
+        }
+    }
+
     public async Task<VisualizerRequestDetailsDto> CreateRequestAsync(
         string userId,
         CreateVisualizerRequestDto dto,

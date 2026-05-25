@@ -20,6 +20,7 @@
                     <div class="admin-session">
                         <span>@GetEmail(authState.User)</span>
                         <form method="post" action="/api/auth/logout">
+                            <AntiforgeryToken />
                             <button type="submit" title="Sign out">Logout</button>
                         </form>
                     </div>
