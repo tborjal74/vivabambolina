@@ -77,16 +77,16 @@
                 <EditForm Model="measurements">
                     <DataAnnotationsValidator />
                     <div class="field-block">
-                        <label>3. Measurements <small>(inches)</small></label>
+                        <label>3. Measurements <small>(centimeters)</small></label>
                         <div class="measurement-grid">
-                            <label>Height <InputNumber class="form-control" @bind-Value="measurements.Height" /></label>
-                            <label>Bust <InputNumber class="form-control" @bind-Value="measurements.Bust" /></label>
-                            <label>Waist <InputNumber class="form-control" @bind-Value="measurements.Waist" /></label>
-                            <label>Hips <InputNumber class="form-control" @bind-Value="measurements.Hips" /></label>
-                            <label>Shoulder <InputNumber class="form-control" @bind-Value="measurements.ShoulderWidth" /></label>
-                            <label>Dress length <InputNumber class="form-control" @bind-Value="measurements.DressLength" /></label>
-                            <label>Sleeve length <InputNumber class="form-control" @bind-Value="measurements.SleeveLength" /></label>
-                            <label>Wrist <InputNumber class="form-control" @bind-Value="measurements.Wrist" /></label>
+                            <label>Height <InputNumber class="form-control" min="90" max="245" step=".1" @bind-Value="measurements.Height" /></label>
+                            <label>Bust <InputNumber class="form-control" min="50" max="205" step=".1" @bind-Value="measurements.Bust" /></label>
+                            <label>Waist <InputNumber class="form-control" min="45" max="180" step=".1" @bind-Value="measurements.Waist" /></label>
+                            <label>Hips <InputNumber class="form-control" min="50" max="220" step=".1" @bind-Value="measurements.Hips" /></label>
+                            <label>Shoulder <InputNumber class="form-control" min="20" max="82" step=".1" @bind-Value="measurements.ShoulderWidth" /></label>
+                            <label>Dress length <InputNumber class="form-control" min="50" max="230" step=".1" @bind-Value="measurements.DressLength" /></label>
+                            <label>Sleeve length <InputNumber class="form-control" min="0" max="102" step=".1" @bind-Value="measurements.SleeveLength" /></label>
+                            <label>Wrist <InputNumber class="form-control" min="10" max="41" step=".1" @bind-Value="measurements.Wrist" /></label>
                         </div>
                         <ValidationSummary />
                     </div>

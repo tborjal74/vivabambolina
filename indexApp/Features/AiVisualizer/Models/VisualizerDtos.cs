@@ -29,29 +29,29 @@ public sealed record FabricColorDto(
 
 public sealed class MeasurementDto
 {
-    [Range(36, 96)]
-    public decimal Height { get; set; } = 65;
+    [Range(90, 245)]
+    public decimal Height { get; set; } = 165;
 
-    [Range(20, 80)]
-    public decimal Bust { get; set; } = 34;
+    [Range(50, 205)]
+    public decimal Bust { get; set; } = 86;
 
-    [Range(18, 70)]
-    public decimal Waist { get; set; } = 26;
+    [Range(45, 180)]
+    public decimal Waist { get; set; } = 66;
 
-    [Range(20, 85)]
-    public decimal Hips { get; set; } = 36;
+    [Range(50, 220)]
+    public decimal Hips { get; set; } = 91;
 
-    [Range(8, 32)]
-    public decimal ShoulderWidth { get; set; } = 15;
+    [Range(20, 82)]
+    public decimal ShoulderWidth { get; set; } = 38;
 
-    [Range(20, 90)]
-    public decimal DressLength { get; set; } = 58;
+    [Range(50, 230)]
+    public decimal DressLength { get; set; } = 147;
 
-    [Range(0, 40)]
-    public decimal SleeveLength { get; set; } = 22;
+    [Range(0, 102)]
+    public decimal SleeveLength { get; set; } = 56;
 
-    [Range(4, 16)]
-    public decimal Wrist { get; set; } = 6;
+    [Range(10, 41)]
+    public decimal Wrist { get; set; } = 15;
 }
 
 public sealed class CreateVisualizerRequestDto

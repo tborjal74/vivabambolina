@@ -30,8 +30,7 @@
 }
 
 .nav-actions button,
-.account-link,
-.selection-card button {
+.account-link {
     color: #171313;
     border: 0;
     background: transparent;
@@ -466,9 +465,7 @@
     background: linear-gradient(180deg, #fffdfb, #fbf5f2);
 }
 
-.preview-header,
-.checkout-row,
-.selection-card > div {
+.preview-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -623,32 +620,6 @@
     font-size: 1.4rem;
 }
 
-.checkout-row {
-    padding-top: 1rem;
-    border-top: 1px solid #ece2df;
-}
-
-.checkout-row > strong {
-    font-size: 1.1rem;
-}
-
-.quantity-control {
-    display: grid;
-    grid-template-columns: 2rem 2rem 2rem;
-    align-items: center;
-    min-height: 2.7rem;
-    border: 1px solid #ded2ce;
-    border-radius: 4px;
-    background: #fff;
-    text-align: center;
-}
-
-.quantity-control button {
-    border: 0;
-    background: transparent;
-    font-size: 1.1rem;
-}
-
 .selection-card {
     justify-self: end;
     width: min(100%, 18rem);
@@ -658,12 +629,6 @@
 .selection-card h3 {
     font-size: .9rem;
     text-transform: uppercase;
-}
-
-.selection-card button {
-    color: #46353d;
-    font-size: .8rem;
-    text-transform: none;
 }
 
 .selection-card ul {
@@ -715,11 +680,6 @@
     .compare-arrow {
         top: 50%;
         transform: translate(-50%, -50%) rotate(90deg);
-    }
-
-    .checkout-row {
-        display: grid;
-        grid-template-columns: 1fr;
     }
 
     .selection-card {

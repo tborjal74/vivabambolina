@@ -99,15 +99,16 @@
                 </div>
 
                 <div class="field-block">
-                    <label>3. Measurements <small>(inches)</small></label>
+                    <label>3. Measurements <small>(centimeters)</small></label>
                     <div class="measurement-grid">
-                        <label>Height <input class="form-control" type="number" min="36" max="96" step=".1" @bind="measurementValues.Height" /></label>
-                        <label>Bust <input class="form-control" type="number" min="20" max="80" step=".1" @bind="measurementValues.Bust" /></label>
-                        <label>Waist <input class="form-control" type="number" min="18" max="70" step=".1" @bind="measurementValues.Waist" /></label>
-                        <label>Hips <input class="form-control" type="number" min="20" max="85" step=".1" @bind="measurementValues.Hips" /></label>
-                        <label>Shoulder Width <input class="form-control" type="number" min="8" max="32" step=".1" @bind="measurementValues.ShoulderWidth" /></label>
-                        <label>Dress Length <input class="form-control" type="number" min="20" max="90" step=".1" @bind="measurementValues.DressLength" /></label>
-                        <label>Sleeve Length <input class="form-control" type="number" min="0" max="40" step=".1" @bind="measurementValues.SleeveLength" /></label>
+                        <label>Height <input class="form-control" type="number" min="90" max="245" step=".1" @bind="measurementValues.Height" /></label>
+                        <label>Bust <input class="form-control" type="number" min="50" max="205" step=".1" @bind="measurementValues.Bust" /></label>
+                        <label>Waist <input class="form-control" type="number" min="45" max="180" step=".1" @bind="measurementValues.Waist" /></label>
+                        <label>Hips <input class="form-control" type="number" min="50" max="220" step=".1" @bind="measurementValues.Hips" /></label>
+                        <label>Shoulder Width <input class="form-control" type="number" min="20" max="82" step=".1" @bind="measurementValues.ShoulderWidth" /></label>
+                        <label>Dress Length <input class="form-control" type="number" min="50" max="230" step=".1" @bind="measurementValues.DressLength" /></label>
+                        <label>Sleeve Length <input class="form-control" type="number" min="0" max="102" step=".1" @bind="measurementValues.SleeveLength" /></label>
+                        <label>Wrist <input class="form-control" type="number" min="10" max="41" step=".1" @bind="measurementValues.Wrist" /></label>
                     </div>
                 </div>
 
@@ -198,24 +199,13 @@
                 <p>The AI preview is generated for visualization purposes only. Final gown fit, fabric behavior, and appearance may vary.</p>
             </div>
 
-            <div class="checkout-row">
-                <div class="quantity-control" aria-label="Quantity">
-                    <button type="button" @onclick="DecreaseQuantity">−</button>
-                    <span>@quantity</span>
-                    <button type="button" @onclick="IncreaseQuantity">+</button>
-                </div>
-            </div>
-
             <aside class="selection-card" aria-label="Your selections">
-                <div>
-                    <h3>Your Selections</h3>
-                    <button type="button">Edit</button>
-                </div>
+                <h3>Your Selections</h3>
                 <ul>
                     <li>Style: @selectedStyle</li>
                     <li>Fabric: @selectedFabric</li>
                     <li>Color: @selectedColor</li>
-                    <li>Measurements: 7 values entered</li>
+                    <li>Measurements: 8 values entered</li>
                     <li>Photo: @(uploadedPhotoFileName is null ? "Not uploaded" : uploadedPhotoFileName)</li>
                 </ul>
             </aside>
@@ -224,7 +214,6 @@
 </div>
 
 @code {
-    private int quantity = 1;
     private string selectedStyle = "Embellished A-Line Gown";
     private string selectedFabric = "Sequin Tulle";
     private string selectedColor = "Blush Pink";
@@ -278,10 +267,6 @@
             ?? user.Identity?.Name
             ?? "Admin";
     }
-
-    private void DecreaseQuantity() => quantity = Math.Max(1, quantity - 1);
-
-    private void IncreaseQuantity() => quantity++;
 
     protected override async Task OnInitializedAsync()
     {
