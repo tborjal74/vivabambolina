@@ -6,7 +6,7 @@ public sealed class GeneratedPreview
     public Guid VisualizerRequestId { get; set; }
     public string ImageUrl { get; set; } = string.Empty;
     public string AiProvider { get; set; } = string.Empty;
-    public string ImageSize { get; set; } = "1024x1024";
+    public string ImageSize { get; set; } = "1024x1536";
     public string Quality { get; set; } = "standard";
     public decimal GenerationCost { get; set; }
     public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;

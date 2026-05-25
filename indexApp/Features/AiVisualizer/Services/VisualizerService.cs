@@ -398,6 +398,16 @@ public sealed class VisualizerService
             return new GenerateAiPreviewResponse(dto.VisualizerRequestId, "Failed", null, "Visualizer request was not found.");
         }
 
+        if (string.IsNullOrWhiteSpace(request.UploadedPhotoUrl) ||
+            fileStorageService.ResolveUploadedPhotoPath(request.UploadedPhotoUrl) is null)
+        {
+            return new GenerateAiPreviewResponse(
+                request.Id,
+                "Failed",
+                null,
+                "Upload a front-facing full-body photo before generating an AI preview.");
+        }
+
         request.Status = VisualizerRequestStatus.Generating;
         request.UpdatedAt = DateTimeOffset.UtcNow;
         request.PromptUsed = promptBuilder.Build(request);
@@ -422,7 +432,7 @@ public sealed class VisualizerService
                 VisualizerRequestId = request.Id,
                 ImageUrl = result.PreviewImageUrl.ToString(),
                 AiProvider = result.Provider,
-                ImageSize = dto.ImageSize ?? "1024x1024",
+                ImageSize = dto.ImageSize ?? "1024x1536",
                 Quality = dto.Quality ?? "standard",
                 GenerationCost = 0
             };

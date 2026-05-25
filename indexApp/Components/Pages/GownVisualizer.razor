@@ -95,7 +95,7 @@
                 <div class="upload-card">
                     <InputFile OnChange="OnPhotoSelected" accept="image/jpeg,image/png,image/webp" />
                     <div>
-                        <strong>@(photoFile?.Name ?? "Optional front-facing reference photo")</strong>
+                        <strong>@(photoFile?.Name ?? "Upload front-facing full-body photo")</strong>
                         <small>JPG, PNG, or WebP up to 10MB.</small>
                     </div>
                 </div>
@@ -165,7 +165,7 @@
         new(1, "Style & Design", "Choose gown silhouette"),
         new(2, "Fabric & Color", "Pick fabric and swatch"),
         new(3, "Measurements", "Enter fitting values"),
-        new(4, "Upload Photo", "Optional reference"),
+        new(4, "Upload Photo", "Required reference photo"),
         new(5, "AI Preview", "Generate result")
     ];
 
@@ -251,12 +251,18 @@
             return;
         }
 
+        if (photoFile is null)
+        {
+            messages.Add("Upload a front-facing full-body photo so the AI preview can visualize the gown on you.");
+            return;
+        }
+
         isGenerating = true;
 
         try
         {
             var userId = await GetUserIdAsync();
-            var uploadedPhotoUrl = photoFile is null ? null : await FileStorageService.SaveUploadAsync(photoFile, userId);
+            var uploadedPhotoUrl = await FileStorageService.SaveUploadAsync(photoFile, userId);
             var request = await VisualizerService.CreateRequestAsync(
                 userId,
                 new CreateVisualizerRequestDto
@@ -270,7 +276,7 @@
 
             var result = await VisualizerService.GenerateAiPreviewAsync(
                 userId,
-                new GenerateAiPreviewRequest(request.Id, "standard", "1024x1024"));
+                new GenerateAiPreviewRequest(request.Id, "standard", "1024x1536"));
 
             if (result.ImageUrl is null)
             {

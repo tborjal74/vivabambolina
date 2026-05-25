@@ -187,7 +187,7 @@
                 <div class="compare-arrow" aria-hidden="true">→</div>
                 <figure>
                     <span>AI Preview</span>
-                    <img class="frame-placeholder"
+                    <img class="frame-placeholder @(latestPreviewUrl is null ? null : "generated-preview")"
                          src="@(latestPreviewUrl ?? "images/placeholders/ai-preview-placeholder.png")"
                          alt="@(latestPreviewUrl is null ? "AI preview placeholder" : "Generated AI gown preview")" />
                 </figure>
@@ -348,6 +348,13 @@
         generationMessage = null;
         generationSucceeded = false;
 
+        if (selectedPhotoFile is null)
+        {
+            photoUploadError = "Upload a front-facing full-body photo before generating your AI preview.";
+            generationMessage = "A photo is required so the AI preview can visualize the gown on you.";
+            return;
+        }
+
         var style = catalogStyles.FirstOrDefault(item => item.Name == selectedStyle);
         var fabric = catalogFabrics.FirstOrDefault(item => item.Name == selectedFabric);
         var color = fabric?.Colors.FirstOrDefault(item => item.ColorName == selectedColor)
@@ -370,9 +377,7 @@
                 return;
             }
 
-            var uploadedPhotoUrl = selectedPhotoFile is null
-                ? null
-                : await FileStorageService.SaveUploadAsync(selectedPhotoFile, userId);
+            var uploadedPhotoUrl = await FileStorageService.SaveUploadAsync(selectedPhotoFile, userId);
 
             var request = await VisualizerService.CreateRequestAsync(
                 userId,
@@ -387,7 +392,7 @@
 
             var result = await VisualizerService.GenerateAiPreviewAsync(
                 userId,
-                new GenerateAiPreviewRequest(request.Id, "medium", "1024x1024"));
+                new GenerateAiPreviewRequest(request.Id, "medium", "1024x1536"));
 
             if (string.IsNullOrWhiteSpace(result.ImageUrl))
             {

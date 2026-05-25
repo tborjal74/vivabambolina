@@ -14,21 +14,11 @@ public sealed class StubGownVisualizationService(
         CancellationToken cancellationToken = default)
     {
         logger.LogInformation(
-            "Created stub gown visualization for product {ProductId} with provider {Provider}.",
+            "Blocked photo-based gown visualization for product {ProductId} because provider {Provider} is configured.",
             request.ProductId,
             _options.Provider);
 
-        var result = new GownVisualizationResult(
-            JobId: $"stub_{Guid.NewGuid():N}",
-            Status: "Ready",
-            PreviewImageUrl: new Uri("/images/visualizer-placeholder.svg", UriKind.Relative),
-            Provider: _options.Provider,
-            CreatedAt: DateTimeOffset.UtcNow,
-            Warnings:
-            [
-                "This is a local stub result. Configure a real image provider before production use."
-            ]);
-
-        return Task.FromResult(result);
+        throw new InvalidOperationException(
+            "AI try-on generation is unavailable while AiVisualizer:Provider is Stub. Configure the OpenAI provider to generate a preview from the uploaded photo.");
     }
 }

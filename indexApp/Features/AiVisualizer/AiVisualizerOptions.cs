@@ -14,7 +14,7 @@ public sealed class AiVisualizerOptions
 
     public string Model { get; init; } = "gpt-image-1.5";
 
-    public string ImageSize { get; init; } = "1024x1024";
+    public string ImageSize { get; init; } = "1024x1536";
 
     public string ImageQuality { get; init; } = "medium";
 
@@ -24,7 +24,7 @@ public sealed class AiVisualizerOptions
 
     public long MaxUploadBytes { get; init; } = 10 * 1024 * 1024;
 
-    public int MaxAiPreviewsPerUserPerDay { get; init; } = 5;
+    public int MaxAiPreviewsPerUserPerDay { get; init; } = 10;
 
     public string[] AllowedImageContentTypes { get; init; } =
     [

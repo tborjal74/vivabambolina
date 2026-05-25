@@ -501,13 +501,17 @@
 .comparison {
     position: relative;
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-columns: repeat(2, minmax(16.1rem, 32.2rem));
+    justify-content: center;
+    align-items: start;
     gap: 1.4rem;
 }
 
 .comparison figure {
     position: relative;
-    min-height: 36rem;
+    width: 100%;
+    min-height: 0;
+    aspect-ratio: 2 / 3;
     margin: 0;
     overflow: hidden;
     border: 1px solid #ded2ce;
@@ -579,7 +583,15 @@
 }
 
 .frame-placeholder {
+    object-fit: contain;
     object-position: center;
+    background: #fffdfb;
+}
+
+.frame-placeholder.generated-preview {
+    object-fit: contain;
+    object-position: center;
+    background: #fffdfb;
 }
 
 .compare-arrow {
@@ -696,7 +708,13 @@
     }
 
     .comparison figure {
-        min-height: 30rem;
+        justify-self: center;
+        width: min(100%, 32.2rem);
+    }
+
+    .compare-arrow {
+        top: 50%;
+        transform: translate(-50%, -50%) rotate(90deg);
     }
 
     .checkout-row {
