@@ -434,6 +434,21 @@
     text-align: left;
 }
 
+.generation-message {
+    margin: 0;
+    font-size: .78rem;
+    font-weight: 800;
+    text-align: left;
+}
+
+.generation-message.success {
+    color: #188347;
+}
+
+.generation-message.error {
+    color: #a02f2f;
+}
+
 .generate-button {
     min-height: 2.9rem;
     border: 1px solid #171313;
@@ -461,14 +476,26 @@
 }
 
 .outline-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.75rem;
     min-height: 2.5rem;
-    padding: 0 1.25rem;
+    padding: .35rem;
     border: 1px solid #171313;
     border-radius: 4px;
     background: #fff;
     color: #171313;
     font-weight: 900;
+    text-decoration: none;
     text-transform: uppercase;
+}
+
+.download-icon {
+    width: 1.85rem;
+    height: 1.85rem;
+    object-fit: cover;
+    border-radius: 2px;
 }
 
 .comparison {

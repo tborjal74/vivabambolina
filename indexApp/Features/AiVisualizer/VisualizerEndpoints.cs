@@ -102,6 +102,19 @@ public static class VisualizerEndpoints
             return result is null ? Results.NotFound() : Results.Ok(result);
         });
 
+        group.MapGet("/request/{id:guid}/uploaded-photo", ViewUploadedPhotoAsync);
+        group.MapGet("/request/{id:guid}/preview-image", ViewPreviewImageAsync);
+        group.MapGet("/request/{id:guid}/download-preview", DownloadPreviewAsync);
+        group.MapDelete("/request/{id:guid}/media", async (
+            Guid id,
+            VisualizerService service,
+            ClaimsPrincipal user,
+            CancellationToken cancellationToken) =>
+        {
+            var removed = await service.DeletePrivateMediaAsync(GetUserId(user), id, cancellationToken);
+            return removed ? Results.NoContent() : Results.NotFound();
+        });
+
         group.MapGet("/history", async (
             VisualizerService service,
             ClaimsPrincipal user,
@@ -109,6 +122,100 @@ public static class VisualizerEndpoints
             Results.Ok(await service.GetHistoryAsync(GetUserId(user), cancellationToken)));
 
         return endpoints;
+    }
+
+    private static async Task<IResult> DownloadPreviewAsync(
+        Guid id,
+        VisualizerService service,
+        FileStorageService storage,
+        IWebHostEnvironment environment,
+        ClaimsPrincipal user,
+        HttpContext httpContext,
+        CancellationToken cancellationToken)
+    {
+        var storageReference = await service.GetLatestGeneratedPreviewImageUrlAsync(GetUserId(user), id, cancellationToken);
+        var imagePath = ResolvePreviewPath(storageReference, storage, environment);
+        if (imagePath is null)
+        {
+            return Results.NotFound();
+        }
+
+        AddPrivateImageHeaders(httpContext);
+        return Results.File(
+            imagePath,
+            GetContentType(imagePath),
+            $"viva-bambolina-ai-preview-{id:N}{Path.GetExtension(imagePath).ToLowerInvariant()}");
+    }
+
+    private static async Task<IResult> ViewUploadedPhotoAsync(
+        Guid id,
+        VisualizerService service,
+        FileStorageService storage,
+        ClaimsPrincipal user,
+        HttpContext httpContext,
+        CancellationToken cancellationToken)
+    {
+        var storageReference = await service.GetUploadedPhotoStorageReferenceAsync(GetUserId(user), id, cancellationToken);
+        var imagePath = storage.ResolveUploadedPhotoPath(storageReference);
+        return ReturnPrivateImage(imagePath, httpContext);
+    }
+
+    private static async Task<IResult> ViewPreviewImageAsync(
+        Guid id,
+        VisualizerService service,
+        FileStorageService storage,
+        IWebHostEnvironment environment,
+        ClaimsPrincipal user,
+        HttpContext httpContext,
+        CancellationToken cancellationToken)
+    {
+        var storageReference = await service.GetLatestGeneratedPreviewImageUrlAsync(GetUserId(user), id, cancellationToken);
+        var imagePath = ResolvePreviewPath(storageReference, storage, environment);
+        return ReturnPrivateImage(imagePath, httpContext);
+    }
+
+    private static string? ResolvePreviewPath(
+        string? storageReference,
+        FileStorageService storage,
+        IWebHostEnvironment environment)
+    {
+        var generatedImagePath = storage.ResolveGeneratedPreviewPath(storageReference);
+        if (generatedImagePath is not null)
+        {
+            return generatedImagePath;
+        }
+
+        return storageReference == "/images/visualizer-placeholder.svg"
+            ? Path.Combine(environment.WebRootPath, "images", "visualizer-placeholder.svg")
+            : null;
+    }
+
+    private static IResult ReturnPrivateImage(string? imagePath, HttpContext httpContext)
+    {
+        if (imagePath is null)
+        {
+            return Results.NotFound();
+        }
+
+        AddPrivateImageHeaders(httpContext);
+        return Results.File(imagePath, GetContentType(imagePath));
+    }
+
+    private static string GetContentType(string imagePath)
+    {
+        return Path.GetExtension(imagePath).ToLowerInvariant() switch
+        {
+            ".jpg" or ".jpeg" => "image/jpeg",
+            ".webp" => "image/webp",
+            ".svg" => "image/svg+xml",
+            _ => "image/png"
+        };
+    }
+
+    private static void AddPrivateImageHeaders(HttpContext httpContext)
+    {
+        httpContext.Response.Headers.CacheControl = "private, no-store";
+        httpContext.Response.Headers.Pragma = "no-cache";
     }
 
     private static string GetUserId(ClaimsPrincipal user)

@@ -17,7 +17,7 @@ public sealed class UsageLimitService
 
     public async Task<bool> CanGenerateAsync(string userId, CancellationToken cancellationToken = default)
     {
-        var since = DateTimeOffset.UtcNow.Date;
+        var since = new DateTimeOffset(DateTime.UtcNow.Date, TimeSpan.Zero);
         var count = await dbContext.AiUsageLogs
             .CountAsync(log => log.UserId == userId && log.Operation == "generate-ai-preview" && log.CreatedAt >= since, cancellationToken);
 

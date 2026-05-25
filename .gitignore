@@ -38,6 +38,8 @@ coverage.*
 *.cache
 *.tmp
 *.temp
+indexApp/wwwroot/uploads/
+indexApp/App_Data/
 
 # Local environment and secrets
 .env

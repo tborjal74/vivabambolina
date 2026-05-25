@@ -13,6 +13,10 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Logging.ClearProviders();
+builder.Logging.AddConsole();
+builder.Logging.AddDebug();
+
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
@@ -23,6 +27,7 @@ builder.Services.AddOptions<AiVisualizerOptions>()
     .Bind(builder.Configuration.GetSection(AiVisualizerOptions.SectionName))
     .Validate(options => options.MaxUploadBytes > 0, "Visualizer uploads must allow at least one byte.")
     .Validate(options => options.AllowedImageContentTypes.Length > 0, "At least one image content type must be allowed.")
+    .Validate(options => options.PrivateMediaRetentionDays > 0, "Visualizer private media retention must be positive.")
     .Validate(options => options.MaxAiPreviewsPerUserPerDay > 0, "AI preview limit must be positive.");
 
 builder.Services.AddOptions<ShopifyOptions>()
@@ -110,6 +115,9 @@ using (var scope = app.Services.CreateScope())
     {
         await scope.ServiceProvider.GetRequiredService<AuthSeeder>().SeedAsync();
         await scope.ServiceProvider.GetRequiredService<AiVisualizerSeeder>().SeedAsync();
+        var visualizerService = scope.ServiceProvider.GetRequiredService<VisualizerService>();
+        await visualizerService.MigratePublicMediaToPrivateStorageAsync();
+        await visualizerService.CleanupExpiredPrivateMediaAsync();
     }
     catch (Exception ex)
     {
@@ -124,7 +132,9 @@ if (!app.Environment.IsDevelopment())
     // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
-app.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages: true);
+app.UseWhen(
+    context => !context.Request.Path.StartsWithSegments("/uploads/visualizer"),
+    branch => branch.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages: true));
 
 if (!app.Environment.IsDevelopment())
 {

@@ -2,6 +2,10 @@
 @layout AuthLayout
 @rendermode InteractiveServer
 @attribute [Authorize]
+@using System.Security.Claims
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject FileStorageService FileStorageService
+@inject VisualizerService VisualizerService
 
 <PageTitle>Viva Bambolina Home</PageTitle>
 
@@ -51,7 +55,7 @@
         <section class="config-panel" aria-label="AI visualizer settings">
             <div class="product-title">
                 <p class="eyebrow">AI Visualizer</p>
-                <h1>Embellished A-Line Gown</h1>
+                <h1>@selectedStyle</h1>
             </div>
 
             <div class="settings-card">
@@ -66,28 +70,30 @@
                 <div class="field-block">
                     <label for="style">1. Style &amp; Design</label>
                     <select id="style" class="form-control" @bind="selectedStyle">
-                        <option>Embellished A-Line Gown</option>
-                        <option>Romantic Tulle Ball Gown</option>
-                        <option>Satin Column Gown</option>
+                        @foreach (var style in catalogStyles)
+                        {
+                            <option value="@style.Name">@style.Name</option>
+                        }
                     </select>
                 </div>
 
                 <div class="field-block">
                     <label for="fabric">2. Fabric &amp; Color</label>
-                    <select id="fabric" class="form-control" @bind="selectedFabric">
-                        <option>Sequin Tulle</option>
-                        <option>Soft Organza</option>
-                        <option>Silk Satin</option>
+                    <select id="fabric" class="form-control" @bind="selectedFabric" @bind:after="OnFabricChanged">
+                        @foreach (var fabric in catalogFabrics)
+                        {
+                            <option value="@fabric.Name">@fabric.Name</option>
+                        }
                     </select>
 
                     <div class="swatches" aria-label="Gown color">
-                        @foreach (var color in colors)
+                        @foreach (var color in SelectedFabric?.Colors ?? [])
                         {
                             <button type="button"
-                                    class="@(selectedColor == color.Name ? "selected" : null)"
-                                    style="background:@color.Value"
-                                    title="@color.Name"
-                                    @onclick="() => selectedColor = color.Name"></button>
+                                    class="@(selectedColor == color.ColorName ? "selected" : null)"
+                                    style="background:@color.HexCode"
+                                    title="@color.ColorName"
+                                    @onclick="() => selectedColor = color.ColorName"></button>
                         }
                     </div>
                 </div>
@@ -95,13 +101,13 @@
                 <div class="field-block">
                     <label>3. Measurements <small>(inches)</small></label>
                     <div class="measurement-grid">
-                        @foreach (var item in measurements)
-                        {
-                            <label>
-                                @item.Label
-                                <input class="form-control" value="@item.Value" />
-                            </label>
-                        }
+                        <label>Height <input class="form-control" type="number" min="36" max="96" step=".1" @bind="measurementValues.Height" /></label>
+                        <label>Bust <input class="form-control" type="number" min="20" max="80" step=".1" @bind="measurementValues.Bust" /></label>
+                        <label>Waist <input class="form-control" type="number" min="18" max="70" step=".1" @bind="measurementValues.Waist" /></label>
+                        <label>Hips <input class="form-control" type="number" min="20" max="85" step=".1" @bind="measurementValues.Hips" /></label>
+                        <label>Shoulder Width <input class="form-control" type="number" min="8" max="32" step=".1" @bind="measurementValues.ShoulderWidth" /></label>
+                        <label>Dress Length <input class="form-control" type="number" min="20" max="90" step=".1" @bind="measurementValues.DressLength" /></label>
+                        <label>Sleeve Length <input class="form-control" type="number" min="0" max="40" step=".1" @bind="measurementValues.SleeveLength" /></label>
                     </div>
                 </div>
 
@@ -110,6 +116,7 @@
                     <label class="upload-picker" for="photo-upload">
                         <InputFile class="file-input"
                                    id="photo-upload"
+                                   @key="photoInputKey"
                                    OnChange="OnPhotoSelected"
                                    accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" />
                         <span>☁</span>
@@ -135,10 +142,14 @@
                         <p class="validation-message" role="alert">@photoUploadError</p>
                     }
                 </div>
-
-                <button type="button" class="generate-button">
-                    ✦ Generate AI Preview
+                <button type="button" class="generate-button" disabled="@isGenerating" @onclick="GeneratePreviewAsync">
+                    @(isGenerating ? "Generating AI Preview..." : "Generate AI Preview")
                 </button>
+
+                @if (!string.IsNullOrWhiteSpace(generationMessage))
+                {
+                    <p class="generation-message @(generationSucceeded ? "success" : "error")" role="status">@generationMessage</p>
+                }
             </div>
         </section>
 
@@ -149,7 +160,16 @@
                     <h2>Customer gown visualization</h2>
                     <p>This preview is for visualization only.</p>
                 </div>
-                <button type="button" class="outline-button">Download Image</button>
+                @if (latestPreviewRequestId is Guid previewRequestId)
+                {
+                    <a class="outline-button"
+                       href="@($"/api/visualizer/request/{previewRequestId}/download-preview")"
+                       download="viva-bambolina-ai-preview.png"
+                       aria-label="Download image"
+                       title="Download image">
+                        <img class="download-icon" src="/images/icons/download-logo.jpg" alt="" />
+                    </a>
+                }
             </div>
 
             <div class="comparison">
@@ -167,7 +187,9 @@
                 <div class="compare-arrow" aria-hidden="true">→</div>
                 <figure>
                     <span>AI Preview</span>
-                    <img class="frame-placeholder" src="images/placeholders/ai-preview-placeholder.png" alt="AI preview placeholder" />
+                    <img class="frame-placeholder"
+                         src="@(latestPreviewUrl ?? "images/placeholders/ai-preview-placeholder.png")"
+                         alt="@(latestPreviewUrl is null ? "AI preview placeholder" : "Generated AI gown preview")" />
                 </figure>
             </div>
 
@@ -209,6 +231,16 @@
     private string? uploadedPhotoDataUrl;
     private string? uploadedPhotoFileName;
     private string? photoUploadError;
+    private string? latestPreviewUrl;
+    private Guid? latestPreviewRequestId;
+    private string? generationMessage;
+    private bool generationSucceeded;
+    private IBrowserFile? selectedPhotoFile;
+    private IReadOnlyList<DressStyleDto> catalogStyles = [];
+    private IReadOnlyList<FabricDto> catalogFabrics = [];
+    private readonly MeasurementDto measurementValues = new();
+    private bool isGenerating;
+    private int photoInputKey;
 
     private const long MaxPhotoBytes = 10 * 1024 * 1024;
 
@@ -236,26 +268,7 @@
         new(5, "AI Preview", "Generate your preview")
     ];
 
-    private readonly ColorSwatch[] colors =
-    [
-        new("Blush Pink", "#f1cfc3"),
-        new("Champagne", "#e4bf95"),
-        new("Midnight Navy", "#13284d"),
-        new("Onyx", "#171717"),
-        new("Emerald", "#0e623e"),
-        new("Ruby", "#bb1628")
-    ];
-
-    private readonly Measurement[] measurements =
-    [
-        new("Height", "65"),
-        new("Bust", "34"),
-        new("Waist", "26"),
-        new("Hips", "36"),
-        new("Shoulder Width", "15"),
-        new("Dress Length", "58"),
-        new("Sleeve Length", "22")
-    ];
+    private FabricDto? SelectedFabric => catalogFabrics.FirstOrDefault(fabric => fabric.Name == selectedFabric);
 
     private string GetStepClass(int stepNumber) => stepNumber == 1 ? "active" : string.Empty;
 
@@ -270,6 +283,26 @@
 
     private void IncreaseQuantity() => quantity++;
 
+    protected override async Task OnInitializedAsync()
+    {
+        catalogStyles = await VisualizerService.GetStylesAsync();
+        catalogFabrics = await VisualizerService.GetFabricsAsync();
+        selectedStyle = catalogStyles.FirstOrDefault(style => style.Name == selectedStyle)?.Name
+            ?? catalogStyles.FirstOrDefault()?.Name
+            ?? selectedStyle;
+        selectedFabric = catalogFabrics.FirstOrDefault(fabric => fabric.Name == selectedFabric)?.Name
+            ?? catalogFabrics.FirstOrDefault()?.Name
+            ?? selectedFabric;
+        OnFabricChanged();
+    }
+
+    private void OnFabricChanged()
+    {
+        selectedColor = SelectedFabric?.Colors.FirstOrDefault(color => color.ColorName == selectedColor)?.ColorName
+            ?? SelectedFabric?.Colors.FirstOrDefault()?.ColorName
+            ?? selectedColor;
+    }
+
     private async Task OnPhotoSelected(InputFileChangeEventArgs args)
     {
         var photo = args.File;
@@ -278,6 +311,7 @@
         uploadedPhotoDataUrl = null;
         uploadedPhotoFileName = null;
         photoUploadError = null;
+        selectedPhotoFile = null;
 
         if (!AllowedPhotoExtensions.Contains(extension) || !AllowedPhotoContentTypes.Contains(photo.ContentType))
         {
@@ -297,6 +331,7 @@
 
         uploadedPhotoFileName = photo.Name;
         uploadedPhotoDataUrl = $"data:{photo.ContentType};base64,{Convert.ToBase64String(memory.ToArray())}";
+        selectedPhotoFile = photo;
     }
 
     private void RemoveUploadedPhoto()
@@ -304,11 +339,77 @@
         uploadedPhotoDataUrl = null;
         uploadedPhotoFileName = null;
         photoUploadError = null;
+        selectedPhotoFile = null;
+        photoInputKey++;
+    }
+
+    private async Task GeneratePreviewAsync()
+    {
+        generationMessage = null;
+        generationSucceeded = false;
+
+        var style = catalogStyles.FirstOrDefault(item => item.Name == selectedStyle);
+        var fabric = catalogFabrics.FirstOrDefault(item => item.Name == selectedFabric);
+        var color = fabric?.Colors.FirstOrDefault(item => item.ColorName == selectedColor)
+            ?? fabric?.Colors.FirstOrDefault();
+
+        if (style is null || fabric is null || color is null)
+        {
+            generationMessage = "The selected style, fabric, or color is unavailable.";
+            return;
+        }
+
+        isGenerating = true;
+        try
+        {
+            var authenticationState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+            var userId = authenticationState.User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrWhiteSpace(userId))
+            {
+                generationMessage = "Please sign in before generating a preview.";
+                return;
+            }
+
+            var uploadedPhotoUrl = selectedPhotoFile is null
+                ? null
+                : await FileStorageService.SaveUploadAsync(selectedPhotoFile, userId);
+
+            var request = await VisualizerService.CreateRequestAsync(
+                userId,
+                new CreateVisualizerRequestDto
+                {
+                    DressStyleId = style.Id,
+                    FabricId = fabric.Id,
+                    FabricColorId = color.Id,
+                    Measurement = measurementValues
+                },
+                uploadedPhotoUrl);
+
+            var result = await VisualizerService.GenerateAiPreviewAsync(
+                userId,
+                new GenerateAiPreviewRequest(request.Id, "medium", "1024x1024"));
+
+            if (string.IsNullOrWhiteSpace(result.ImageUrl))
+            {
+                generationMessage = result.ErrorMessage ?? "AI preview generation failed. Please try again.";
+                return;
+            }
+
+            latestPreviewUrl = result.ImageUrl;
+            latestPreviewRequestId = result.VisualizerRequestId;
+            generationMessage = "AI preview generated successfully.";
+            generationSucceeded = true;
+        }
+        catch (Exception ex)
+        {
+            generationMessage = $"AI preview generation failed: {ex.Message}";
+        }
+        finally
+        {
+            isGenerating = false;
+        }
     }
 
     private sealed record Step(int Number, string Title, string Description);
 
-    private sealed record ColorSwatch(string Name, string Value);
-
-    private sealed record Measurement(string Label, string Value);
 }

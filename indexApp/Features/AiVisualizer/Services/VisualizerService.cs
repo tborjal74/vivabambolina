@@ -13,6 +13,7 @@ public sealed class VisualizerService
     private readonly MeasurementService measurementService;
     private readonly PromptBuilder promptBuilder;
     private readonly UsageLimitService usageLimitService;
+    private readonly FileStorageService fileStorageService;
     private readonly AiVisualizerOptions options;
 
     public VisualizerService(
@@ -21,6 +22,7 @@ public sealed class VisualizerService
         MeasurementService measurementService,
         PromptBuilder promptBuilder,
         UsageLimitService usageLimitService,
+        FileStorageService fileStorageService,
         IOptions<AiVisualizerOptions> options)
     {
         this.dbContext = dbContext;
@@ -28,6 +30,7 @@ public sealed class VisualizerService
         this.measurementService = measurementService;
         this.promptBuilder = promptBuilder;
         this.usageLimitService = usageLimitService;
+        this.fileStorageService = fileStorageService;
         this.options = options.Value;
     }
 
@@ -48,6 +51,129 @@ public sealed class VisualizerService
             .OrderBy(fabric => fabric.Name)
             .Select(fabric => ToDto(fabric))
             .ToListAsync(cancellationToken);
+    }
+
+    public async Task MigratePublicMediaToPrivateStorageAsync(CancellationToken cancellationToken = default)
+    {
+        var migratedFiles = new List<FileStorageService.LegacyMediaCopy>();
+        var requests = await dbContext.VisualizerRequests
+            .Where(request => request.UploadedPhotoUrl != null && request.UploadedPhotoUrl.StartsWith("/uploads/visualizer/"))
+            .ToListAsync(cancellationToken);
+
+        foreach (var request in requests)
+        {
+            var migrated = await fileStorageService.CopyLegacyUploadedPhotoToPrivateStorageAsync(request.UploadedPhotoUrl, cancellationToken);
+            if (migrated is null)
+            {
+                continue;
+            }
+
+            request.UploadedPhotoUrl = migrated.StorageReference;
+            migratedFiles.Add(migrated);
+        }
+
+        var previews = await dbContext.GeneratedPreviews
+            .Where(preview => preview.ImageUrl.StartsWith("/uploads/visualizer/generated/"))
+            .ToListAsync(cancellationToken);
+
+        foreach (var preview in previews)
+        {
+            var migrated = await fileStorageService.CopyLegacyGeneratedPreviewToPrivateStorageAsync(preview.ImageUrl, cancellationToken);
+            if (migrated is null)
+            {
+                continue;
+            }
+
+            preview.ImageUrl = migrated.StorageReference;
+            migratedFiles.Add(migrated);
+        }
+
+        if (migratedFiles.Count == 0)
+        {
+            return;
+        }
+
+        await dbContext.SaveChangesAsync(cancellationToken);
+        foreach (var migratedFile in migratedFiles)
+        {
+            fileStorageService.DeleteLegacyPublicFile(migratedFile.LegacyAbsolutePath);
+        }
+    }
+
+    public async Task CleanupExpiredPrivateMediaAsync(CancellationToken cancellationToken = default)
+    {
+        var cutoff = DateTimeOffset.UtcNow.AddDays(-options.PrivateMediaRetentionDays);
+        var expiredRequests = await dbContext.VisualizerRequests
+            .Where(request => request.UploadedPhotoUrl != null && request.UpdatedAt <= cutoff)
+            .ToListAsync(cancellationToken);
+        var expiredPreviews = await dbContext.GeneratedPreviews
+            .Where(preview => preview.CreatedAt <= cutoff)
+            .ToListAsync(cancellationToken);
+
+        var referencesToDelete = expiredRequests
+            .Select(request => request.UploadedPhotoUrl)
+            .Concat(expiredPreviews.Select(preview => preview.ImageUrl))
+            .Where(reference => !string.IsNullOrWhiteSpace(reference))
+            .Cast<string>()
+            .ToList();
+
+        foreach (var request in expiredRequests)
+        {
+            request.UploadedPhotoUrl = null;
+        }
+
+        dbContext.GeneratedPreviews.RemoveRange(expiredPreviews);
+        if (expiredRequests.Count > 0 || expiredPreviews.Count > 0)
+        {
+            await dbContext.SaveChangesAsync(cancellationToken);
+        }
+
+        foreach (var reference in referencesToDelete)
+        {
+            fileStorageService.DeletePrivateMedia(reference);
+        }
+
+        var retainedReferences = (await dbContext.VisualizerRequests
+                .Where(request => request.UploadedPhotoUrl != null)
+                .Select(request => request.UploadedPhotoUrl!)
+                .ToListAsync(cancellationToken))
+            .Concat(await dbContext.GeneratedPreviews
+                .Select(preview => preview.ImageUrl)
+                .ToListAsync(cancellationToken))
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        fileStorageService.DeleteUnreferencedExpiredPrivateMedia(retainedReferences, cutoff.UtcDateTime);
+    }
+
+    public async Task<bool> DeletePrivateMediaAsync(
+        string userId,
+        Guid requestId,
+        CancellationToken cancellationToken = default)
+    {
+        var request = await dbContext.VisualizerRequests
+            .Include(candidate => candidate.GeneratedPreviews)
+            .SingleOrDefaultAsync(candidate => candidate.Id == requestId && candidate.UserId == userId, cancellationToken);
+        if (request is null)
+        {
+            return false;
+        }
+
+        var referencesToDelete = request.GeneratedPreviews.Select(preview => preview.ImageUrl).ToList();
+        if (!string.IsNullOrWhiteSpace(request.UploadedPhotoUrl))
+        {
+            referencesToDelete.Add(request.UploadedPhotoUrl);
+        }
+
+        request.UploadedPhotoUrl = null;
+        dbContext.GeneratedPreviews.RemoveRange(request.GeneratedPreviews);
+        await dbContext.SaveChangesAsync(cancellationToken);
+
+        foreach (var reference in referencesToDelete)
+        {
+            fileStorageService.DeletePrivateMedia(reference);
+        }
+
+        return true;
     }
 
     public async Task<VisualizerRequestDetailsDto> CreateRequestAsync(
@@ -206,7 +332,7 @@ public sealed class VisualizerService
 
     public async Task<IReadOnlyList<PreviewHistoryItemDto>> GetHistoryAsync(string userId, CancellationToken cancellationToken = default)
     {
-        return await dbContext.GeneratedPreviews
+        var history = await dbContext.GeneratedPreviews
             .Include(preview => preview.VisualizerRequest!)
                 .ThenInclude(request => request.DressStyle)
             .Include(preview => preview.VisualizerRequest!)
@@ -223,6 +349,35 @@ public sealed class VisualizerService
                 preview.ImageUrl,
                 preview.CreatedAt))
             .ToListAsync(cancellationToken);
+
+        return history
+            .Select(item => item with { ImageUrl = GetPreviewImageUrl(item.RequestId) })
+            .ToList();
+    }
+
+    public async Task<string?> GetUploadedPhotoStorageReferenceAsync(
+        string userId,
+        Guid requestId,
+        CancellationToken cancellationToken = default)
+    {
+        return await dbContext.VisualizerRequests
+            .Where(request => request.Id == requestId && request.UserId == userId)
+            .Select(request => request.UploadedPhotoUrl)
+            .FirstOrDefaultAsync(cancellationToken);
+    }
+
+    public async Task<string?> GetLatestGeneratedPreviewImageUrlAsync(
+        string userId,
+        Guid requestId,
+        CancellationToken cancellationToken = default)
+    {
+        return await dbContext.GeneratedPreviews
+            .Where(preview =>
+                preview.VisualizerRequestId == requestId &&
+                preview.VisualizerRequest!.UserId == userId)
+            .OrderByDescending(preview => preview.CreatedAt)
+            .Select(preview => preview.ImageUrl)
+            .FirstOrDefaultAsync(cancellationToken);
     }
 
     public async Task<GenerateAiPreviewResponse> GenerateAiPreviewAsync(
@@ -255,7 +410,7 @@ public sealed class VisualizerService
                 ProductId: request.DressStyleId.ToString(),
                 ProductTitle: request.DressStyle!.Name,
                 CustomerImageFileName: request.UploadedPhotoUrl ?? "basic-preview",
-                CustomerImageContentType: "image/svg+xml",
+                CustomerImageContentType: GetImageContentType(request.UploadedPhotoUrl),
                 GarmentImageUrl: null,
                 Prompt: request.PromptUsed,
                 ImageSize: dto.ImageSize,
@@ -288,7 +443,7 @@ public sealed class VisualizerService
             });
 
             await dbContext.SaveChangesAsync(cancellationToken);
-            return new GenerateAiPreviewResponse(request.Id, request.Status.ToString(), preview.ImageUrl, null);
+            return new GenerateAiPreviewResponse(request.Id, request.Status.ToString(), GetPreviewImageUrl(request.Id), null);
         }
         catch (Exception ex)
         {
@@ -312,9 +467,21 @@ public sealed class VisualizerService
         }
     }
 
+    private static string GetImageContentType(string? photoUrl)
+    {
+        return Path.GetExtension(photoUrl)?.ToLowerInvariant() switch
+        {
+            ".jpg" or ".jpeg" => "image/jpeg",
+            ".png" => "image/png",
+            ".webp" => "image/webp",
+            _ => "image/png"
+        };
+    }
+
     private IQueryable<VisualizerRequest> LoadRequestQuery()
     {
         return dbContext.VisualizerRequests
+            .AsSplitQuery()
             .Include(request => request.DressStyle)
             .Include(request => request.Fabric)
                 .ThenInclude(fabric => fabric!.Colors)
@@ -365,12 +532,22 @@ public sealed class VisualizerService
                 SleeveLength = measurement.SleeveLength,
                 Wrist = measurement.Wrist
             },
-            request.UploadedPhotoUrl,
+            request.UploadedPhotoUrl is null ? null : GetUploadedPhotoImageUrl(request.Id),
             request.BasicPreviewUrl,
             request.PromptUsed,
             request.Status,
             request.ErrorMessage,
-            latestPreview?.ImageUrl,
+            latestPreview is null ? null : GetPreviewImageUrl(request.Id),
             request.CreatedAt);
+    }
+
+    private static string GetUploadedPhotoImageUrl(Guid requestId)
+    {
+        return $"/api/visualizer/request/{requestId}/uploaded-photo";
+    }
+
+    private static string GetPreviewImageUrl(Guid requestId)
+    {
+        return $"/api/visualizer/request/{requestId}/preview-image";
     }
 }

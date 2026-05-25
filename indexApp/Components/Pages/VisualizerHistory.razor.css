@@ -52,6 +52,44 @@
     padding: 1rem;
 }
 
+.history-card .history-actions {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    padding: .45rem 0 0;
+}
+
+.history-actions .icon-download-button {
+    display: grid;
+    place-items: center;
+    width: 2.4rem;
+    height: 2.4rem;
+    padding: .25rem;
+    border: 1px solid #d8ccc8;
+    border-radius: 4px;
+    background: #fff;
+}
+
+.icon-download-button img {
+    width: 1.7rem;
+    height: 1.7rem;
+    aspect-ratio: auto;
+    object-fit: cover;
+    background: transparent;
+    border-radius: 2px;
+}
+
+.delete-button {
+    border: 0;
+    background: transparent;
+    color: #982f3e;
+    font-weight: 800;
+}
+
+.delete-button:disabled {
+    opacity: .55;
+}
+
 .history-card h2 {
     margin: 0;
     color: #1d1918;

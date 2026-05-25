@@ -33,7 +33,21 @@
                         <h2>@item.StyleName</h2>
                         <p>@item.FabricName · @item.ColorName</p>
                         <small>@item.CreatedAt.ToLocalTime().ToString("g")</small>
-                        <a href="@item.ImageUrl" download>Download</a>
+                        <div class="history-actions">
+                            <a href="@($"/api/visualizer/request/{item.RequestId}/download-preview")"
+                               class="icon-download-button"
+                               download="viva-bambolina-ai-preview.png"
+                               aria-label="Download image"
+                               title="Download image">
+                                <img src="/images/icons/download-logo.jpg" alt="" />
+                            </a>
+                            <button type="button"
+                                    class="delete-button"
+                                    disabled="@deletingRequestIds.Contains(item.RequestId)"
+                                    @onclick="() => DeletePreviewAsync(item.RequestId)">
+                                @(deletingRequestIds.Contains(item.RequestId) ? "Deleting..." : "Delete")
+                            </button>
+                        </div>
                     </div>
                 </article>
             }
@@ -43,6 +57,7 @@
 
 @code {
     private IReadOnlyList<PreviewHistoryItemDto> items = [];
+    private readonly HashSet<Guid> deletingRequestIds = [];
     private bool isLoading = true;
 
     protected override async Task OnInitializedAsync()
@@ -53,5 +68,25 @@
 
         items = await VisualizerService.GetHistoryAsync(userId);
         isLoading = false;
+    }
+
+    private async Task DeletePreviewAsync(Guid requestId)
+    {
+        deletingRequestIds.Add(requestId);
+        try
+        {
+            var state = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+            var userId = state.User.FindFirstValue(ClaimTypes.NameIdentifier)
+                ?? throw new InvalidOperationException("You must be signed in to remove a preview.");
+
+            if (await VisualizerService.DeletePrivateMediaAsync(userId, requestId))
+            {
+                items = items.Where(item => item.RequestId != requestId).ToList();
+            }
+        }
+        finally
+        {
+            deletingRequestIds.Remove(requestId);
+        }
     }
 }

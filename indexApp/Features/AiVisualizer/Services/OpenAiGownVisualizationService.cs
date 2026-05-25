@@ -15,18 +15,18 @@ public sealed class OpenAiGownVisualizationService : IGownVisualizationService
     };
 
     private readonly HttpClient httpClient;
-    private readonly IWebHostEnvironment environment;
+    private readonly FileStorageService fileStorageService;
     private readonly AiVisualizerOptions options;
     private readonly ILogger<OpenAiGownVisualizationService> logger;
 
     public OpenAiGownVisualizationService(
         HttpClient httpClient,
-        IWebHostEnvironment environment,
+        FileStorageService fileStorageService,
         IOptions<AiVisualizerOptions> options,
         ILogger<OpenAiGownVisualizationService> logger)
     {
         this.httpClient = httpClient;
-        this.environment = environment;
+        this.fileStorageService = fileStorageService;
         this.options = options.Value;
         this.logger = logger;
     }
@@ -40,25 +40,11 @@ public sealed class OpenAiGownVisualizationService : IGownVisualizationService
             throw new InvalidOperationException("OpenAI image generation is enabled, but AiVisualizer:ApiKey is not configured.");
         }
 
-        var endpoint = string.IsNullOrWhiteSpace(options.Endpoint)
-            ? "https://api.openai.com/v1/images/generations"
-            : options.Endpoint;
-
-        using var httpRequest = new HttpRequestMessage(HttpMethod.Post, endpoint);
+        var inputImagePath = fileStorageService.ResolveUploadedPhotoPath(request.CustomerImageFileName);
+        using var httpRequest = inputImagePath is null
+            ? CreateGenerationRequest(request)
+            : CreateEditRequest(request, inputImagePath);
         httpRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", options.ApiKey);
-
-        var body = new OpenAiImageGenerationRequest(
-            Model: options.Model,
-            Prompt: request.Prompt ?? request.ProductTitle,
-            Size: NormalizeSize(request.ImageSize ?? options.ImageSize),
-            Quality: NormalizeQuality(request.Quality ?? options.ImageQuality),
-            NumberOfImages: 1,
-            OutputFormat: "png");
-
-        httpRequest.Content = new StringContent(
-            JsonSerializer.Serialize(body, SerializerOptions),
-            Encoding.UTF8,
-            "application/json");
 
         using var response = await httpClient.SendAsync(httpRequest, cancellationToken);
         var responseContent = await response.Content.ReadAsStringAsync(cancellationToken);
@@ -70,7 +56,14 @@ public sealed class OpenAiGownVisualizationService : IGownVisualizationService
                 response.StatusCode,
                 responseContent);
 
-            throw new InvalidOperationException("OpenAI image generation failed. Check provider configuration and logs.");
+            throw new InvalidOperationException(response.StatusCode switch
+            {
+                System.Net.HttpStatusCode.Unauthorized => "OpenAI rejected the API key. Create a new project API key and update the server secret.",
+                System.Net.HttpStatusCode.Forbidden => "OpenAI denied image generation for this project. Check model access and organization verification.",
+                System.Net.HttpStatusCode.TooManyRequests => "OpenAI usage limits or billing limits were reached. Check project billing and rate limits.",
+                System.Net.HttpStatusCode.BadRequest => "OpenAI rejected the image request. Check the configured image model, size, and quality.",
+                _ => $"OpenAI image generation failed with status code {(int)response.StatusCode}."
+            });
         }
 
         var payload = JsonSerializer.Deserialize<OpenAiImageGenerationResponse>(responseContent, SerializerOptions);
@@ -81,7 +74,7 @@ public sealed class OpenAiGownVisualizationService : IGownVisualizationService
         }
 
         var imageBytes = Convert.FromBase64String(imageBase64);
-        var imageUrl = await SaveGeneratedImageAsync(imageBytes, cancellationToken);
+        var imageUrl = await fileStorageService.SaveGeneratedImageAsync(imageBytes, cancellationToken);
 
         return new GownVisualizationResult(
             JobId: $"openai_{Guid.NewGuid():N}",
@@ -92,17 +85,53 @@ public sealed class OpenAiGownVisualizationService : IGownVisualizationService
             Warnings: []);
     }
 
-    private async Task<string> SaveGeneratedImageAsync(byte[] imageBytes, CancellationToken cancellationToken)
+    private HttpRequestMessage CreateGenerationRequest(GownVisualizationRequest request)
     {
-        var relativeDirectory = Path.Combine("uploads", "visualizer", "generated");
-        var absoluteDirectory = Path.Combine(environment.WebRootPath, relativeDirectory);
-        Directory.CreateDirectory(absoluteDirectory);
+        var endpoint = string.IsNullOrWhiteSpace(options.Endpoint)
+            ? "https://api.openai.com/v1/images/generations"
+            : options.Endpoint;
 
-        var fileName = $"{Guid.NewGuid():N}.png";
-        var absolutePath = Path.Combine(absoluteDirectory, fileName);
-        await File.WriteAllBytesAsync(absolutePath, imageBytes, cancellationToken);
+        var body = new OpenAiImageGenerationRequest(
+            Model: options.Model,
+            Prompt: request.Prompt ?? request.ProductTitle,
+            Size: NormalizeSize(request.ImageSize ?? options.ImageSize),
+            Quality: NormalizeQuality(request.Quality ?? options.ImageQuality),
+            NumberOfImages: 1,
+            OutputFormat: "png");
 
-        return "/" + Path.Combine(relativeDirectory, fileName).Replace('\\', '/');
+        return new HttpRequestMessage(HttpMethod.Post, endpoint)
+        {
+            Content = new StringContent(
+                JsonSerializer.Serialize(body, SerializerOptions),
+                Encoding.UTF8,
+                "application/json")
+        };
+    }
+
+    private HttpRequestMessage CreateEditRequest(GownVisualizationRequest request, string imagePath)
+    {
+        var endpoint = string.IsNullOrWhiteSpace(options.EditEndpoint)
+            ? "https://api.openai.com/v1/images/edits"
+            : options.EditEndpoint;
+
+        var content = new MultipartFormDataContent
+        {
+            { new StringContent(options.Model), "model" },
+            { new StringContent(request.Prompt ?? request.ProductTitle), "prompt" },
+            { new StringContent(NormalizeSize(request.ImageSize ?? options.ImageSize)), "size" },
+            { new StringContent(NormalizeQuality(request.Quality ?? options.ImageQuality)), "quality" },
+            { new StringContent("png"), "output_format" },
+            { new StringContent("high"), "input_fidelity" }
+        };
+
+        var imageContent = new StreamContent(File.OpenRead(imagePath));
+        imageContent.Headers.ContentType = new MediaTypeHeaderValue(request.CustomerImageContentType);
+        content.Add(imageContent, "image", Path.GetFileName(imagePath));
+
+        return new HttpRequestMessage(HttpMethod.Post, endpoint)
+        {
+            Content = content
+        };
     }
 
     private static string NormalizeSize(string? size)

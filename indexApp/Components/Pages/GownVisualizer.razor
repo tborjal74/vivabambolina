@@ -146,7 +146,13 @@
                 @if (latestPreviewUrl is not null)
                 {
                     <img src="@latestPreviewUrl" alt="Generated AI gown preview" />
-                    <a class="download-button" href="@latestPreviewUrl" download>Download Image</a>
+                    <a class="download-button"
+                       href="@($"/api/visualizer/request/{latestPreviewRequestId}/download-preview")"
+                       download="viva-bambolina-ai-preview.png"
+                       aria-label="Download image"
+                       title="Download image">
+                        <img class="download-icon" src="/images/icons/download-logo.jpg" alt="" />
+                    </a>
                 }
             </div>
         </section>
@@ -172,6 +178,7 @@
     private Guid selectedColorId;
     private IBrowserFile? photoFile;
     private string? latestPreviewUrl;
+    private Guid? latestPreviewRequestId;
     private int activeStep = 1;
     private bool isLoading = true;
     private bool isGenerating;
@@ -203,19 +210,32 @@
 
     private void OnPhotoSelected(InputFileChangeEventArgs args)
     {
-        photoFile = args.File;
+        var candidate = args.File;
         activeStep = 4;
         messages.Clear();
-        if (photoFile.Size > 10 * 1024 * 1024)
+
+        if (candidate.ContentType is not ("image/jpeg" or "image/png" or "image/webp"))
         {
-            messages.Add("The selected image is too large. Maximum size is 10MB.");
+            photoFile = null;
+            messages.Add("Please upload a JPG, PNG, or WebP image.");
+            return;
         }
+
+        if (candidate.Size > 10 * 1024 * 1024)
+        {
+            photoFile = null;
+            messages.Add("The selected image is too large. Maximum size is 10MB.");
+            return;
+        }
+
+        photoFile = candidate;
     }
 
     private async Task GeneratePreviewAsync()
     {
         messages.Clear();
         latestPreviewUrl = null;
+        latestPreviewRequestId = null;
         activeStep = 5;
 
         var errors = MeasurementService.Validate(measurements);
@@ -259,7 +279,12 @@
             }
 
             latestPreviewUrl = result.ImageUrl;
+            latestPreviewRequestId = result.VisualizerRequestId;
             messages.Add("AI preview generated and saved to your history.");
+        }
+        catch (Exception ex)
+        {
+            messages.Add($"AI preview generation failed: {ex.Message}");
         }
         finally
         {
