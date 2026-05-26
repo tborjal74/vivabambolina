@@ -288,6 +288,16 @@
     background-color: #fff;
 }
 
+.placeholder-control {
+    color: #827875;
+    font-style: italic;
+}
+
+.placeholder-control option:not(:disabled) {
+    color: #1d1918;
+    font-style: normal;
+}
+
 .swatches {
     display: flex;
     gap: .75rem;

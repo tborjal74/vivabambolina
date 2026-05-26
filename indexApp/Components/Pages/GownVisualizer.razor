@@ -32,8 +32,11 @@
         <section class="configuration-panel" aria-label="Visualizer configuration">
             <div class="panel-heading">
                 <p class="eyebrow">Guided visualizer</p>
-                <h1>@SelectedStyle?.Name</h1>
-                <strong>@((SelectedStyle?.BasePrice ?? 0).ToString("C0"))</strong>
+                <h1>@(SelectedStyle?.Name ?? "Your Custom Gown")</h1>
+                @if (SelectedStyle is not null)
+                {
+                    <strong>@SelectedStyle.BasePrice.ToString("C0")</strong>
+                }
             </div>
 
             @if (isLoading)
@@ -44,7 +47,8 @@
             {
                 <div class="field-block">
                     <label for="style">1. Style &amp; Design</label>
-                    <select id="style" class="form-control" @bind="selectedStyleId">
+                    <select id="style" class="form-control @(selectedStyleId == Guid.Empty ? "placeholder-control" : null)" @bind="selectedStyleId">
+                        <option value="@Guid.Empty" disabled>Select style and design...</option>
                         @foreach (var style in styles)
                         {
                             <option value="@style.Id">@style.Name</option>
@@ -54,8 +58,9 @@
                 </div>
 
                 <div class="field-block">
-                    <label for="fabric">2. Fabric</label>
-                    <select id="fabric" class="form-control" @bind="selectedFabricId">
+                    <label for="fabric">2. Fabric &amp; Color</label>
+                    <select id="fabric" class="form-control @(selectedFabricId == Guid.Empty ? "placeholder-control" : null)" @bind="selectedFabricId">
+                        <option value="@Guid.Empty" disabled>Select fabric and color...</option>
                         @foreach (var fabric in fabrics)
                         {
                             <option value="@fabric.Id">@fabric.Name</option>
@@ -202,9 +207,6 @@
     {
         styles = await VisualizerService.GetStylesAsync();
         fabrics = await VisualizerService.GetFabricsAsync();
-        selectedStyleId = styles.FirstOrDefault()?.Id ?? Guid.Empty;
-        selectedFabricId = fabrics.FirstOrDefault()?.Id ?? Guid.Empty;
-        selectedColorId = fabrics.FirstOrDefault()?.Colors.FirstOrDefault()?.Id ?? Guid.Empty;
         isLoading = false;
     }
 

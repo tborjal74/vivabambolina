@@ -56,7 +56,7 @@
         <section class="config-panel" aria-label="AI visualizer settings">
             <div class="product-title">
                 <p class="eyebrow">AI Visualizer</p>
-                <h1>@selectedStyle</h1>
+                <h1>@(string.IsNullOrWhiteSpace(selectedStyle) ? "Your Custom Gown" : selectedStyle)</h1>
             </div>
 
             <div class="settings-card">
@@ -70,7 +70,8 @@
 
                 <div class="field-block">
                     <label for="style">1. Style &amp; Design</label>
-                    <select id="style" class="form-control" @bind="selectedStyle">
+                    <select id="style" class="form-control @(string.IsNullOrWhiteSpace(selectedStyle) ? "placeholder-control" : null)" @bind="selectedStyle">
+                        <option value="" disabled>Select style and design...</option>
                         @foreach (var style in catalogStyles)
                         {
                             <option value="@style.Name">@style.Name</option>
@@ -80,7 +81,8 @@
 
                 <div class="field-block">
                     <label for="fabric">2. Fabric &amp; Color</label>
-                    <select id="fabric" class="form-control" @bind="selectedFabric" @bind:after="OnFabricChanged">
+                    <select id="fabric" class="form-control @(string.IsNullOrWhiteSpace(selectedFabric) ? "placeholder-control" : null)" @bind="selectedFabric" @bind:after="OnFabricChanged">
+                        <option value="" disabled>Select fabric and color...</option>
                         @foreach (var fabric in catalogFabrics)
                         {
                             <option value="@fabric.Name">@fabric.Name</option>
@@ -203,9 +205,9 @@
             <aside class="selection-card" aria-label="Your selections">
                 <h3>Your Selections</h3>
                 <ul>
-                    <li>Style: @selectedStyle</li>
-                    <li>Fabric: @selectedFabric</li>
-                    <li>Color: @selectedColor</li>
+                    <li>Style: @(string.IsNullOrWhiteSpace(selectedStyle) ? "Not selected" : selectedStyle)</li>
+                    <li>Fabric: @(string.IsNullOrWhiteSpace(selectedFabric) ? "Not selected" : selectedFabric)</li>
+                    <li>Color: @(string.IsNullOrWhiteSpace(selectedColor) ? "Not selected" : selectedColor)</li>
                     <li>Measurements: 8 values entered</li>
                     <li>Photo: @(uploadedPhotoFileName is null ? "Not uploaded" : uploadedPhotoFileName)</li>
                 </ul>
@@ -215,9 +217,9 @@
 </div>
 
 @code {
-    private string selectedStyle = "Embellished A-Line Gown";
-    private string selectedFabric = "Sequin Tulle";
-    private string selectedColor = "Blush Pink";
+    private string selectedStyle = string.Empty;
+    private string selectedFabric = string.Empty;
+    private string selectedColor = string.Empty;
     private string? uploadedPhotoDataUrl;
     private string? uploadedPhotoFileName;
     private string? photoUploadError;
@@ -273,20 +275,13 @@
     {
         catalogStyles = await VisualizerService.GetStylesAsync();
         catalogFabrics = await VisualizerService.GetFabricsAsync();
-        selectedStyle = catalogStyles.FirstOrDefault(style => style.Name == selectedStyle)?.Name
-            ?? catalogStyles.FirstOrDefault()?.Name
-            ?? selectedStyle;
-        selectedFabric = catalogFabrics.FirstOrDefault(fabric => fabric.Name == selectedFabric)?.Name
-            ?? catalogFabrics.FirstOrDefault()?.Name
-            ?? selectedFabric;
-        OnFabricChanged();
     }
 
     private void OnFabricChanged()
     {
         selectedColor = SelectedFabric?.Colors.FirstOrDefault(color => color.ColorName == selectedColor)?.ColorName
             ?? SelectedFabric?.Colors.FirstOrDefault()?.ColorName
-            ?? selectedColor;
+            ?? string.Empty;
     }
 
     private async Task OnPhotoSelected(InputFileChangeEventArgs args)
