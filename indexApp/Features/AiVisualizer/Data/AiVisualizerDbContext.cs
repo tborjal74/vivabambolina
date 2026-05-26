@@ -142,6 +142,7 @@ public sealed class AiVisualizerDbContext : DbContext
             entity.Property(preview => preview.Id).HasColumnName("id");
             entity.Property(preview => preview.VisualizerRequestId).HasColumnName("visualizer_request_id");
             entity.Property(preview => preview.ImageUrl).HasColumnName("image_url").HasMaxLength(500).IsRequired();
+            entity.Property(preview => preview.View).HasColumnName("view").HasConversion<string>().HasMaxLength(16).IsRequired();
             entity.Property(preview => preview.AiProvider).HasColumnName("ai_provider").HasMaxLength(80).IsRequired();
             entity.Property(preview => preview.ImageSize).HasColumnName("image_size").HasMaxLength(40).IsRequired();
             entity.Property(preview => preview.Quality).HasColumnName("quality").HasMaxLength(40).IsRequired();

@@ -290,7 +290,7 @@
                 @if (latestPreviewRequestId is Guid previewRequestId)
                 {
                     <a class="outline-button"
-                       href="@($"/api/visualizer/request/{previewRequestId}/download-preview")"
+                       href="@GetPreviewDownloadUrl(previewRequestId)"
                        download="viva-bambolina-ai-preview.png"
                        aria-label="Download image"
                        title="Download image">
@@ -313,10 +313,10 @@
                 </figure>
                 <div class="compare-arrow" aria-hidden="true">→</div>
                 <figure aria-busy="@isGenerating">
-                    <span>AI Preview</span>
-                    <img class="frame-placeholder @(latestPreviewUrl is null ? null : "generated-preview")"
-                         src="@(latestPreviewUrl ?? "images/placeholders/ai-preview-placeholder.png")"
-                         alt="@(latestPreviewUrl is null ? "AI preview placeholder" : "Generated AI gown preview")" />
+                    <span>AI Preview - @(isShowingBackPreview ? "Back" : "Front")</span>
+                    <img class="frame-placeholder @(DisplayedPreviewUrl is null ? null : "generated-preview")"
+                         src="@(DisplayedPreviewUrl ?? "images/placeholders/ai-preview-placeholder.png")"
+                         alt="@(DisplayedPreviewUrl is null ? "AI preview placeholder" : $"Generated AI gown {DisplayedPreviewLabel.ToLowerInvariant()} preview")" />
                     @if (isGenerating)
                     {
                         <div class="ai-frame-loading" role="status" aria-live="polite">
@@ -329,6 +329,25 @@
                     }
                 </figure>
             </div>
+
+            @if (latestPreviewUrl is not null)
+            {
+                <div class="preview-view-toggle" role="group" aria-label="Select AI preview view">
+                    <button type="button"
+                            class="@(!isShowingBackPreview ? "active" : null)"
+                            aria-pressed="@(!isShowingBackPreview)"
+                            @onclick="() => isShowingBackPreview = false">
+                        Front View
+                    </button>
+                    <button type="button"
+                            class="@(isShowingBackPreview ? "active" : null)"
+                            aria-pressed="@isShowingBackPreview"
+                            disabled="@(latestBackPreviewUrl is null)"
+                            @onclick="() => isShowingBackPreview = true">
+                        Back View
+                    </button>
+                </div>
+            }
 
             <button type="button" class="generate-button" disabled="@isGenerating" @onclick="GeneratePreviewAsync">
                 @(isGenerating ? "Generating AI Preview..." : "Generate AI Preview")
@@ -361,6 +380,7 @@
     private string? uploadedPhotoFileName;
     private string? photoUploadError;
     private string? latestPreviewUrl;
+    private string? latestBackPreviewUrl;
     private Guid? latestPreviewRequestId;
     private string? generationMessage;
     private bool generationSucceeded;
@@ -369,6 +389,7 @@
     private IReadOnlyList<FabricDto> catalogFabrics = [];
     private readonly MeasurementDto measurementValues = new();
     private bool isGenerating;
+    private bool isShowingBackPreview;
     private int photoInputKey;
 
     private const long MaxPhotoBytes = 10 * 1024 * 1024;
@@ -446,6 +467,17 @@
     private IEnumerable<FabricColorDto> AvailableColors => catalogFabrics
         .SelectMany(fabric => fabric.Colors)
         .DistinctBy(color => color.ColorName);
+
+    private string? DisplayedPreviewUrl => isShowingBackPreview ? latestBackPreviewUrl : latestPreviewUrl;
+
+    private string DisplayedPreviewLabel => isShowingBackPreview ? "Back" : "Front";
+
+    private string GetPreviewDownloadUrl(Guid requestId)
+    {
+        return isShowingBackPreview
+            ? $"/api/visualizer/request/{requestId}/download-preview?view=back"
+            : $"/api/visualizer/request/{requestId}/download-preview";
+    }
 
     private string HorsehairEdgeHemSelection
     {
@@ -612,7 +644,9 @@
             }
 
             latestPreviewUrl = result.ImageUrl;
+            latestBackPreviewUrl = result.BackImageUrl;
             latestPreviewRequestId = result.VisualizerRequestId;
+            isShowingBackPreview = false;
             generationMessage = "AI preview generated successfully.";
             generationSucceeded = true;
         }

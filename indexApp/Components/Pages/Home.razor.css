@@ -742,6 +742,38 @@
     font-size: 1.75rem;
 }
 
+.preview-view-toggle {
+    justify-self: end;
+    display: flex;
+    width: calc(50% - .7rem);
+    padding: .24rem;
+    border: 1px solid #e0d4cf;
+    border-radius: 999px;
+    background: #fff;
+}
+
+.preview-view-toggle button {
+    flex: 1;
+    min-height: 2.35rem;
+    padding: .4rem .6rem;
+    border: 0;
+    border-radius: 999px;
+    background: transparent;
+    color: #655854;
+    font-size: .72rem;
+    font-weight: 900;
+    text-transform: uppercase;
+}
+
+.preview-view-toggle button.active {
+    background: #2d2928;
+    color: #fff;
+}
+
+.preview-view-toggle button:disabled {
+    opacity: .42;
+}
+
 .preview-note {
     display: flex;
     gap: .75rem;
@@ -820,6 +852,10 @@
     .selection-card {
         justify-self: stretch;
         width: auto;
+    }
+
+    .preview-view-toggle {
+        width: 100%;
     }
 }
 

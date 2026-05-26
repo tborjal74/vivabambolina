@@ -122,6 +122,7 @@ public sealed record GenerateAiPreviewResponse(
     Guid VisualizerRequestId,
     string Status,
     string? ImageUrl,
+    string? BackImageUrl,
     string? ErrorMessage);
 
 public sealed record VisualizerRequestDetailsDto(
@@ -138,6 +139,7 @@ public sealed record VisualizerRequestDetailsDto(
     VisualizerRequestStatus Status,
     string? ErrorMessage,
     string? LatestPreviewUrl,
+    string? LatestBackPreviewUrl,
     DateTimeOffset CreatedAt);
 
 public sealed record PreviewHistoryItemDto(

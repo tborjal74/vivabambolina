@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using indexApp.Features.AiVisualizer.Entities;
 using indexApp.Features.AiVisualizer.Models;
 using indexApp.Features.AiVisualizer.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -126,6 +127,7 @@ public static class VisualizerEndpoints
 
     private static async Task<IResult> DownloadPreviewAsync(
         Guid id,
+        string? view,
         VisualizerService service,
         FileStorageService storage,
         IWebHostEnvironment environment,
@@ -133,7 +135,8 @@ public static class VisualizerEndpoints
         HttpContext httpContext,
         CancellationToken cancellationToken)
     {
-        var storageReference = await service.GetLatestGeneratedPreviewImageUrlAsync(GetUserId(user), id, cancellationToken);
+        var previewView = ParseView(view);
+        var storageReference = await service.GetLatestGeneratedPreviewImageUrlAsync(GetUserId(user), id, previewView, cancellationToken);
         var imagePath = ResolvePreviewPath(storageReference, storage, environment);
         if (imagePath is null)
         {
@@ -144,7 +147,7 @@ public static class VisualizerEndpoints
         return Results.File(
             imagePath,
             GetContentType(imagePath),
-            $"viva-bambolina-ai-preview-{id:N}{Path.GetExtension(imagePath).ToLowerInvariant()}");
+            $"viva-bambolina-ai-preview-{previewView.ToString().ToLowerInvariant()}-{id:N}{Path.GetExtension(imagePath).ToLowerInvariant()}");
     }
 
     private static async Task<IResult> ViewUploadedPhotoAsync(
@@ -162,6 +165,7 @@ public static class VisualizerEndpoints
 
     private static async Task<IResult> ViewPreviewImageAsync(
         Guid id,
+        string? view,
         VisualizerService service,
         FileStorageService storage,
         IWebHostEnvironment environment,
@@ -169,7 +173,7 @@ public static class VisualizerEndpoints
         HttpContext httpContext,
         CancellationToken cancellationToken)
     {
-        var storageReference = await service.GetLatestGeneratedPreviewImageUrlAsync(GetUserId(user), id, cancellationToken);
+        var storageReference = await service.GetLatestGeneratedPreviewImageUrlAsync(GetUserId(user), id, ParseView(view), cancellationToken);
         var imagePath = ResolvePreviewPath(storageReference, storage, environment);
         return ReturnPrivateImage(imagePath, httpContext);
     }
@@ -216,6 +220,13 @@ public static class VisualizerEndpoints
     {
         httpContext.Response.Headers.CacheControl = "private, no-store";
         httpContext.Response.Headers.Pragma = "no-cache";
+    }
+
+    private static PreviewView ParseView(string? view)
+    {
+        return string.Equals(view, "back", StringComparison.OrdinalIgnoreCase)
+            ? PreviewView.Back
+            : PreviewView.Front;
     }
 
     private static string GetUserId(ClaimsPrincipal user)

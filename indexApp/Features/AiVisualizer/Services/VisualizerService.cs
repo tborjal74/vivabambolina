@@ -408,7 +408,7 @@ public sealed class VisualizerService
                 .ThenInclude(request => request.Fabric)
             .Include(preview => preview.VisualizerRequest!)
                 .ThenInclude(request => request.FabricColor)
-            .Where(preview => preview.VisualizerRequest!.UserId == userId)
+            .Where(preview => preview.VisualizerRequest!.UserId == userId && preview.View == PreviewView.Front)
             .OrderByDescending(preview => preview.CreatedAt)
             .Select(preview => new PreviewHistoryItemDto(
                 preview.VisualizerRequestId,
@@ -438,12 +438,14 @@ public sealed class VisualizerService
     public async Task<string?> GetLatestGeneratedPreviewImageUrlAsync(
         string userId,
         Guid requestId,
+        PreviewView view = PreviewView.Front,
         CancellationToken cancellationToken = default)
     {
         return await dbContext.GeneratedPreviews
             .Where(preview =>
                 preview.VisualizerRequestId == requestId &&
-                preview.VisualizerRequest!.UserId == userId)
+                preview.VisualizerRequest!.UserId == userId &&
+                preview.View == view)
             .OrderByDescending(preview => preview.CreatedAt)
             .Select(preview => preview.ImageUrl)
             .FirstOrDefaultAsync(cancellationToken);
@@ -456,7 +458,7 @@ public sealed class VisualizerService
     {
         if (!await usageLimitService.CanGenerateAsync(userId, cancellationToken))
         {
-            return new GenerateAiPreviewResponse(dto.VisualizerRequestId, "Failed", null, "Daily AI preview limit reached.");
+            return new GenerateAiPreviewResponse(dto.VisualizerRequestId, "Failed", null, null, "Daily AI preview limit reached.");
         }
 
         var request = await LoadRequestQuery()
@@ -464,7 +466,7 @@ public sealed class VisualizerService
 
         if (request is null)
         {
-            return new GenerateAiPreviewResponse(dto.VisualizerRequestId, "Failed", null, "Visualizer request was not found.");
+            return new GenerateAiPreviewResponse(dto.VisualizerRequestId, "Failed", null, null, "Visualizer request was not found.");
         }
 
         if (string.IsNullOrWhiteSpace(request.UploadedPhotoUrl) ||
@@ -474,18 +476,19 @@ public sealed class VisualizerService
                 request.Id,
                 "Failed",
                 null,
+                null,
                 "Upload a front-facing full-body photo before generating an AI preview.");
         }
 
         request.Status = VisualizerRequestStatus.Generating;
         request.UpdatedAt = DateTimeOffset.UtcNow;
-        request.PromptUsed = promptBuilder.Build(request);
+        request.PromptUsed = promptBuilder.Build(request, PreviewView.Front);
         request.ErrorMessage = null;
         await dbContext.SaveChangesAsync(cancellationToken);
 
         try
         {
-            var generationRequest = new GownVisualizationRequest(
+            var frontGenerationRequest = new GownVisualizationRequest(
                 ProductId: request.DressStyleId.ToString(),
                 ProductTitle: request.DressTemplate ?? request.DressStyle!.Name,
                 CustomerImageFileName: request.UploadedPhotoUrl ?? "basic-preview",
@@ -495,12 +498,29 @@ public sealed class VisualizerService
                 ImageSize: dto.ImageSize,
                 Quality: dto.Quality);
 
-            var result = await imageGenerationService.CreatePreviewAsync(generationRequest, cancellationToken);
-            var preview = new GeneratedPreview
+            var backGenerationRequest = frontGenerationRequest with
+            {
+                Prompt = promptBuilder.Build(request, PreviewView.Back)
+            };
+
+            var frontResult = await imageGenerationService.CreatePreviewAsync(frontGenerationRequest, cancellationToken);
+            var backResult = await imageGenerationService.CreatePreviewAsync(backGenerationRequest, cancellationToken);
+            var frontPreview = new GeneratedPreview
             {
                 VisualizerRequestId = request.Id,
-                ImageUrl = result.PreviewImageUrl.ToString(),
-                AiProvider = result.Provider,
+                ImageUrl = frontResult.PreviewImageUrl.ToString(),
+                View = PreviewView.Front,
+                AiProvider = frontResult.Provider,
+                ImageSize = dto.ImageSize ?? "1024x1536",
+                Quality = dto.Quality ?? "standard",
+                GenerationCost = 0
+            };
+            var backPreview = new GeneratedPreview
+            {
+                VisualizerRequestId = request.Id,
+                ImageUrl = backResult.PreviewImageUrl.ToString(),
+                View = PreviewView.Back,
+                AiProvider = backResult.Provider,
                 ImageSize = dto.ImageSize ?? "1024x1536",
                 Quality = dto.Quality ?? "standard",
                 GenerationCost = 0
@@ -509,20 +529,25 @@ public sealed class VisualizerService
             request.Status = VisualizerRequestStatus.Completed;
             request.UpdatedAt = DateTimeOffset.UtcNow;
 
-            dbContext.GeneratedPreviews.Add(preview);
+            dbContext.GeneratedPreviews.AddRange(frontPreview, backPreview);
             dbContext.AiUsageLogs.Add(new AiUsageLog
             {
                 UserId = userId,
                 VisualizerRequestId = request.Id,
-                Provider = result.Provider,
+                Provider = frontResult.Provider,
                 Operation = "generate-ai-preview",
-                EstimatedInputTokens = request.PromptUsed.Length / 4,
+                EstimatedInputTokens = (request.PromptUsed.Length + backGenerationRequest.Prompt!.Length) / 4,
                 EstimatedOutputTokens = 0,
                 CostEstimate = 0
             });
 
             await dbContext.SaveChangesAsync(cancellationToken);
-            return new GenerateAiPreviewResponse(request.Id, request.Status.ToString(), GetPreviewImageUrl(request.Id), null);
+            return new GenerateAiPreviewResponse(
+                request.Id,
+                request.Status.ToString(),
+                GetPreviewImageUrl(request.Id, PreviewView.Front),
+                GetPreviewImageUrl(request.Id, PreviewView.Back),
+                null);
         }
         catch (Exception ex)
         {
@@ -530,7 +555,7 @@ public sealed class VisualizerService
             request.ErrorMessage = "AI preview generation failed. Please try again.";
             request.UpdatedAt = DateTimeOffset.UtcNow;
             await dbContext.SaveChangesAsync(cancellationToken);
-            return new GenerateAiPreviewResponse(request.Id, request.Status.ToString(), null, ex.Message);
+            return new GenerateAiPreviewResponse(request.Id, request.Status.ToString(), null, null, ex.Message);
         }
     }
 
@@ -592,7 +617,14 @@ public sealed class VisualizerService
     private static VisualizerRequestDetailsDto ToDetailsDto(VisualizerRequest request)
     {
         var measurement = request.Measurement!;
-        var latestPreview = request.GeneratedPreviews.OrderByDescending(preview => preview.CreatedAt).FirstOrDefault();
+        var latestPreview = request.GeneratedPreviews
+            .Where(preview => preview.View == PreviewView.Front)
+            .OrderByDescending(preview => preview.CreatedAt)
+            .FirstOrDefault();
+        var latestBackPreview = request.GeneratedPreviews
+            .Where(preview => preview.View == PreviewView.Back)
+            .OrderByDescending(preview => preview.CreatedAt)
+            .FirstOrDefault();
 
         return new VisualizerRequestDetailsDto(
             request.Id,
@@ -641,7 +673,8 @@ public sealed class VisualizerService
             request.PromptUsed,
             request.Status,
             request.ErrorMessage,
-            latestPreview is null ? null : GetPreviewImageUrl(request.Id),
+            latestPreview is null ? null : GetPreviewImageUrl(request.Id, PreviewView.Front),
+            latestBackPreview is null ? null : GetPreviewImageUrl(request.Id, PreviewView.Back),
             request.CreatedAt);
     }
 
@@ -661,8 +694,10 @@ public sealed class VisualizerService
         return $"/api/visualizer/request/{requestId}/uploaded-photo";
     }
 
-    private static string GetPreviewImageUrl(Guid requestId)
+    private static string GetPreviewImageUrl(Guid requestId, PreviewView view = PreviewView.Front)
     {
-        return $"/api/visualizer/request/{requestId}/preview-image";
+        return view == PreviewView.Back
+            ? $"/api/visualizer/request/{requestId}/preview-image?view=back"
+            : $"/api/visualizer/request/{requestId}/preview-image";
     }
 }

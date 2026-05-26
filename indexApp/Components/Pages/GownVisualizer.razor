@@ -207,9 +207,24 @@
 
                 @if (latestPreviewUrl is not null)
                 {
-                    <img src="@latestPreviewUrl" alt="Generated AI gown preview" />
+                    <img src="@DisplayedPreviewUrl" alt="Generated AI gown @(isShowingBackPreview ? "back" : "front") preview" />
+                    <div class="preview-view-toggle" role="group" aria-label="Select AI preview view">
+                        <button type="button"
+                                class="@(!isShowingBackPreview ? "active" : null)"
+                                aria-pressed="@(!isShowingBackPreview)"
+                                @onclick="() => isShowingBackPreview = false">
+                            Front View
+                        </button>
+                        <button type="button"
+                                class="@(isShowingBackPreview ? "active" : null)"
+                                aria-pressed="@isShowingBackPreview"
+                                disabled="@(latestBackPreviewUrl is null)"
+                                @onclick="() => isShowingBackPreview = true">
+                            Back View
+                        </button>
+                    </div>
                     <a class="download-button"
-                       href="@($"/api/visualizer/request/{latestPreviewRequestId}/download-preview")"
+                       href="@GetPreviewDownloadUrl()"
                        download="viva-bambolina-ai-preview.png"
                        aria-label="Download image"
                        title="Download image">
@@ -240,16 +255,27 @@
     private Guid selectedColorId;
     private IBrowserFile? photoFile;
     private string? latestPreviewUrl;
+    private string? latestBackPreviewUrl;
     private Guid? latestPreviewRequestId;
     private int activeStep = 1;
     private bool isLoading = true;
     private bool isGenerating;
+    private bool isShowingBackPreview;
 
     private DressStyleDto? SelectedStyle => styles.FirstOrDefault(style => style.Id == selectedStyleId);
 
     private FabricDto? SelectedFabric => fabrics.FirstOrDefault(fabric => fabric.Id == selectedFabricId);
 
     private FabricColorDto? SelectedColor => SelectedFabric?.Colors.FirstOrDefault(color => color.Id == selectedColorId);
+
+    private string? DisplayedPreviewUrl => isShowingBackPreview ? latestBackPreviewUrl : latestPreviewUrl;
+
+    private string GetPreviewDownloadUrl()
+    {
+        return isShowingBackPreview
+            ? $"/api/visualizer/request/{latestPreviewRequestId}/download-preview?view=back"
+            : $"/api/visualizer/request/{latestPreviewRequestId}/download-preview";
+    }
 
     private string HorsehairEdgeHemSelection
     {
@@ -370,7 +396,9 @@
             }
 
             latestPreviewUrl = result.ImageUrl;
+            latestBackPreviewUrl = result.BackImageUrl;
             latestPreviewRequestId = result.VisualizerRequestId;
+            isShowingBackPreview = false;
             messages.Add("AI preview generated and saved to your history.");
         }
         catch (Exception ex)
