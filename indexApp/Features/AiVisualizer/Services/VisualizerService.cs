@@ -246,10 +246,10 @@ public sealed class VisualizerService
             CenterNeckToWaistPoint = dto.Measurement.CenterNeckToWaistPoint!.Value,
             CuffHeight = dto.Measurement.CuffHeight!.Value,
             SkirtShape = dto.Measurement.SkirtShape,
-            HasHorsehairEdgeHem = dto.Measurement.HasHorsehairEdgeHem,
+            HasHorsehairEdgeHem = dto.Measurement.HasHorsehairEdgeHem!.Value,
             NecklineShape = dto.Measurement.NecklineShape,
             SleeveShape = dto.Measurement.SleeveShape,
-            HasBuiltInPuffy = dto.Measurement.HasBuiltInPuffy
+            HasBuiltInPuffy = dto.Measurement.HasBuiltInPuffy!.Value
         };
 
         var request = new VisualizerRequest
@@ -353,10 +353,10 @@ public sealed class VisualizerService
         request.Measurement.CenterNeckToWaistPoint = dto.CenterNeckToWaistPoint!.Value;
         request.Measurement.CuffHeight = dto.CuffHeight!.Value;
         request.Measurement.SkirtShape = dto.SkirtShape;
-        request.Measurement.HasHorsehairEdgeHem = dto.HasHorsehairEdgeHem;
+        request.Measurement.HasHorsehairEdgeHem = dto.HasHorsehairEdgeHem!.Value;
         request.Measurement.NecklineShape = dto.NecklineShape;
         request.Measurement.SleeveShape = dto.SleeveShape;
-        request.Measurement.HasBuiltInPuffy = dto.HasBuiltInPuffy;
+        request.Measurement.HasBuiltInPuffy = dto.HasBuiltInPuffy!.Value;
         request.Measurement.UpdatedAt = DateTimeOffset.UtcNow;
         request.UpdatedAt = DateTimeOffset.UtcNow;
 

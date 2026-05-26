@@ -29,8 +29,10 @@ public sealed class MeasurementService
         Check(measurement.CenterNeckToWaistPoint, 15, 90, "Center neck to waist point", errors);
         Check(measurement.CuffHeight, 0, 30, "Cuff height", errors);
         CheckChoice(measurement.SkirtShape, SkirtShapes, "Skirt shape", errors);
+        CheckYesNo(measurement.HasHorsehairEdgeHem, "Horsehair edge hem", errors);
         CheckChoice(measurement.NecklineShape, NecklineShapes, "Neckline shape", errors);
         CheckChoice(measurement.SleeveShape, SleeveShapes, "Sleeve shape", errors);
+        CheckYesNo(measurement.HasBuiltInPuffy, "Built-in puffy", errors);
         return errors;
     }
 
@@ -73,6 +75,14 @@ public sealed class MeasurementService
         if (!allowedValues.Contains(value, StringComparer.OrdinalIgnoreCase))
         {
             errors.Add($"Select a valid {label.ToLowerInvariant()}.");
+        }
+    }
+
+    private static void CheckYesNo(bool? value, string label, ICollection<string> errors)
+    {
+        if (value is null)
+        {
+            errors.Add($"Select Yes or No for {label.ToLowerInvariant()}.");
         }
     }
 

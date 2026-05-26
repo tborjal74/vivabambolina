@@ -138,7 +138,8 @@
                             </select>
                         </label>
                         <label>Horsehair Edge Hem
-                            <select class="form-control" @bind="measurementValues.HasHorsehairEdgeHem">
+                            <select class="form-control @(measurementValues.HasHorsehairEdgeHem is null ? "placeholder-control" : null)" @bind="measurementValues.HasHorsehairEdgeHem">
+                                <option value="" disabled>Y/N...</option>
                                 <option value="false">No</option>
                                 <option value="true">Yes</option>
                             </select>
@@ -162,7 +163,8 @@
                             </select>
                         </label>
                         <label>Built-in Puffy
-                            <select class="form-control" @bind="measurementValues.HasBuiltInPuffy">
+                            <select class="form-control @(measurementValues.HasBuiltInPuffy is null ? "placeholder-control" : null)" @bind="measurementValues.HasBuiltInPuffy">
+                                <option value="" disabled>Y/N...</option>
                                 <option value="false">No</option>
                                 <option value="true">Yes</option>
                             </select>
@@ -244,11 +246,21 @@
                     }
                 </figure>
                 <div class="compare-arrow" aria-hidden="true">→</div>
-                <figure>
+                <figure aria-busy="@isGenerating">
                     <span>AI Preview</span>
                     <img class="frame-placeholder @(latestPreviewUrl is null ? null : "generated-preview")"
                          src="@(latestPreviewUrl ?? "images/placeholders/ai-preview-placeholder.png")"
                          alt="@(latestPreviewUrl is null ? "AI preview placeholder" : "Generated AI gown preview")" />
+                    @if (isGenerating)
+                    {
+                        <div class="ai-frame-loading" role="status" aria-live="polite">
+                            <div class="loading-ring" aria-hidden="true">
+                                <span></span>
+                            </div>
+                            <strong>Generating AI Preview</strong>
+                            <small>Tailoring your visualization...</small>
+                        </div>
+                    }
                 </figure>
             </div>
 
@@ -264,6 +276,8 @@
                     <li>Fabric: @(string.IsNullOrWhiteSpace(selectedFabric) ? "Not selected" : selectedFabric)</li>
                     <li>Color: @(string.IsNullOrWhiteSpace(selectedColor) ? "Not selected" : selectedColor)</li>
                     <li>Specifications: Garment details entered</li>
+                    <li>Horsehair Edge Hem: @FormatYesNo(measurementValues.HasHorsehairEdgeHem)</li>
+                    <li>Built-in Puffy: @FormatYesNo(measurementValues.HasBuiltInPuffy)</li>
                     <li>Photo: @(uploadedPhotoFileName is null ? "Not uploaded" : uploadedPhotoFileName)</li>
                 </ul>
             </aside>
@@ -325,6 +339,13 @@
             ?? user.Identity?.Name
             ?? "Admin";
     }
+
+    private static string FormatYesNo(bool? value) => value switch
+    {
+        true => "Yes",
+        false => "No",
+        null => "Not selected"
+    };
 
     protected override async Task OnInitializedAsync()
     {

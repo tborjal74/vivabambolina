@@ -80,7 +80,8 @@ public sealed class MeasurementDto
     [Required]
     public string SkirtShape { get; set; } = string.Empty;
 
-    public bool HasHorsehairEdgeHem { get; set; }
+    [Required]
+    public bool? HasHorsehairEdgeHem { get; set; }
 
     [Required]
     public string NecklineShape { get; set; } = string.Empty;
@@ -88,7 +89,8 @@ public sealed class MeasurementDto
     [Required]
     public string SleeveShape { get; set; } = string.Empty;
 
-    public bool HasBuiltInPuffy { get; set; }
+    [Required]
+    public bool? HasBuiltInPuffy { get; set; }
 }
 
 public sealed class CreateVisualizerRequestDto

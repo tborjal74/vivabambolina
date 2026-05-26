@@ -118,7 +118,8 @@
                                 </InputSelect>
                             </label>
                             <label>Horsehair Edge Hem
-                                <InputSelect class="form-control" @bind-Value="measurements.HasHorsehairEdgeHem">
+                                <InputSelect class="@($"form-control {(measurements.HasHorsehairEdgeHem is null ? "placeholder-control" : null)}")" @bind-Value="measurements.HasHorsehairEdgeHem">
+                                    <option value="" disabled>Y/N...</option>
                                     <option value="false">No</option>
                                     <option value="true">Yes</option>
                                 </InputSelect>
@@ -142,7 +143,8 @@
                                 </InputSelect>
                             </label>
                             <label>Built-in Puffy
-                                <InputSelect class="form-control" @bind-Value="measurements.HasBuiltInPuffy">
+                                <InputSelect class="@($"form-control {(measurements.HasBuiltInPuffy is null ? "placeholder-control" : null)}")" @bind-Value="measurements.HasBuiltInPuffy">
+                                    <option value="" disabled>Y/N...</option>
                                     <option value="false">No</option>
                                     <option value="true">Yes</option>
                                 </InputSelect>
