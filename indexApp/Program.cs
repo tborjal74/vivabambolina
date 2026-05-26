@@ -124,7 +124,7 @@ using (var scope = app.Services.CreateScope())
         app.Logger.LogWarning(ex, "Admin auth seed skipped because the database is not available.");
     }
 }
-
+//Comment
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
