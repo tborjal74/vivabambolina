@@ -5,9 +5,9 @@ namespace indexApp.Features.AiVisualizer.Services;
 public sealed class MeasurementService
 {
     public static readonly IReadOnlyList<string> Sizes = ["S", "M", "L", "XL", "XXL"];
-    public static readonly IReadOnlyList<string> SkirtShapes = ["A-Line", "Ball Gown", "Mermaid", "Column", "Circle"];
-    public static readonly IReadOnlyList<string> NecklineShapes = ["Sweetheart", "V-Neck", "Scoop", "Boat", "Off-Shoulder", "Halter", "Mock Neck"];
-    public static readonly IReadOnlyList<string> SleeveShapes = ["Sleeveless", "Cap Sleeve", "Short Sleeve", "Puff Sleeve", "Bishop Sleeve", "Long Fitted Sleeve"];
+    public static readonly IReadOnlyList<string> SkirtShapes = ["A-Line Skirt", "Ball Gown Skirt", "Gathered Full Skirt", "Tiered Ruffle Skirt", "Layered Tulle Skirt", "Bubble / Pouf Skirt", "Drop-Waist Skirt", "Structured Full Skirt"];
+    public static readonly IReadOnlyList<string> NecklineShapes = ["Round Neckline", "Jewel Neckline", "High Neckline", "Soft V-Notch Neckline", "Boat Neckline"];
+    public static readonly IReadOnlyList<string> SleeveShapes = ["Short Puff Sleeve", "Long Puff Sleeve", "Long Fitted Sleeve", "Balloon Sleeve", "Bishop Sleeve with Cuff", "Structured Shoulder Sleeve", "Plain Long Sleeve"];
 
     public IReadOnlyList<string> Validate(MeasurementDto measurement)
     {
@@ -88,11 +88,11 @@ public sealed class MeasurementService
 
     private static decimal GetSkirtVolume(string skirtShape) => skirtShape switch
     {
-        "Ball Gown" => 0.18m,
-        "Circle" => 0.14m,
-        "A-Line" => 0.08m,
-        "Mermaid" => -0.05m,
-        "Column" => -0.09m,
+        "Ball Gown Skirt" or "Gathered Full Skirt" or "Structured Full Skirt" => 0.18m,
+        "Layered Tulle Skirt" or "Tiered Ruffle Skirt" => 0.14m,
+        "A-Line Skirt" => 0.08m,
+        "Drop-Waist Skirt" => 0.04m,
+        "Bubble / Pouf Skirt" => 0.16m,
         _ => 0m
     };
 

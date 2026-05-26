@@ -8,6 +8,13 @@ public sealed class VisualizerRequest
     public Guid FabricId { get; set; }
     public Guid FabricColorId { get; set; }
     public Guid MeasurementId { get; set; }
+    public string? DressTemplate { get; set; }
+    public string? BodiceDesign { get; set; }
+    public string? WaistShape { get; set; }
+    public string? FabricType { get; set; }
+    public string? FabricPattern { get; set; }
+    public string? Accessories { get; set; }
+    public string? BackClosure { get; set; }
     public string? UploadedPhotoUrl { get; set; }
     public string? BasicPreviewUrl { get; set; }
     public string? PromptUsed { get; set; }

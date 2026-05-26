@@ -33,76 +33,156 @@
     </header>
 
     <main class="product-studio">
-        <aside class="product-column" aria-label="Gown setup">
-            <div class="product-card">
-                <div class="gown-art" aria-hidden="true">
-                    <div class="dress-bodice"></div>
-                    <div class="dress-skirt"></div>
-                </div>
-            </div>
-
-            <section class="step-list" aria-label="Visualizer steps">
-                @foreach (var step in steps)
-                {
-                    <button type="button" class="@GetStepClass(step.Number)">
-                        <span>@step.Number</span>
-                        <strong>@step.Title</strong>
-                        <small>@step.Description</small>
-                    </button>
-                }
-            </section>
-        </aside>
-
         <section class="config-panel" aria-label="AI visualizer settings">
-            <div class="product-title">
-                <p class="eyebrow">AI Visualizer</p>
-                <h1>@(string.IsNullOrWhiteSpace(selectedStyle) ? "Your Custom Gown" : selectedStyle)</h1>
-            </div>
-
             <div class="settings-card">
-                <div class="settings-heading">
-                    <span>✧</span>
-                    <div>
-                        <h2>See how it looks on you</h2>
-                        <p>Choose the gown details, add measurements, and preview the look.</p>
+                <aside class="design-panel" aria-label="Style and design">
+                    <div class="product-title">
+                        <p class="eyebrow">AI Visualizer</p>
+                        <h1>@(string.IsNullOrWhiteSpace(selectedDressTemplate) ? "Your Custom Gown" : selectedDressTemplate)</h1>
                     </div>
-                </div>
 
-                <div class="field-block">
-                    <label for="style">1. Style &amp; Design</label>
-                    <select id="style" class="form-control @(string.IsNullOrWhiteSpace(selectedStyle) ? "placeholder-control" : null)" @bind="selectedStyle">
-                        <option value="" disabled>Select style and design...</option>
-                        @foreach (var style in catalogStyles)
-                        {
-                            <option value="@style.Name">@style.Name</option>
-                        }
-                    </select>
-                </div>
-
-                <div class="field-block">
-                    <label for="fabric">2. Fabric &amp; Color</label>
-                    <select id="fabric" class="form-control @(string.IsNullOrWhiteSpace(selectedFabric) ? "placeholder-control" : null)" @bind="selectedFabric" @bind:after="OnFabricChanged">
-                        <option value="" disabled>Select fabric and color...</option>
-                        @foreach (var fabric in catalogFabrics)
-                        {
-                            <option value="@fabric.Name">@fabric.Name</option>
-                        }
-                    </select>
-
-                    <div class="swatches" aria-label="Gown color">
-                        @foreach (var color in SelectedFabric?.Colors ?? [])
-                        {
-                            <button type="button"
-                                    class="@(selectedColor == color.ColorName ? "selected" : null)"
-                                    style="background:@color.HexCode"
-                                    title="@color.ColorName"
-                                    @onclick="() => selectedColor = color.ColorName"></button>
-                        }
+                    <div class="product-card">
+                        <div class="gown-art" aria-hidden="true">
+                            <div class="dress-bodice"></div>
+                            <div class="dress-skirt"></div>
+                        </div>
                     </div>
-                </div>
 
-                <div class="field-block">
-                    <label>3. Dress/Gown Specifications <small>(measurements in centimeters)</small></label>
+                    <div class="settings-heading">
+                        <span>✧</span>
+                        <div>
+                            <h2>See how it looks on you</h2>
+                            <p>Choose the gown details, add measurements, and preview the look.</p>
+                        </div>
+                    </div>
+
+                    <div class="field-block">
+                        <label for="dress-template">1. Dress Template</label>
+                        <select id="dress-template" class="form-control @(string.IsNullOrWhiteSpace(selectedDressTemplate) ? "placeholder-control" : null)" @bind="selectedDressTemplate">
+                            <option value="" disabled>Select dress template...</option>
+                            @foreach (var template in DressTemplates)
+                            {
+                                <option value="@template">@template</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="field-block">
+                        <label for="neckline">2. Neckline Shape</label>
+                        <select id="neckline" class="form-control @(string.IsNullOrWhiteSpace(measurementValues.NecklineShape) ? "placeholder-control" : null)" @bind="measurementValues.NecklineShape">
+                            <option value="" disabled>Select neckline shape...</option>
+                            @foreach (var shape in MeasurementService.NecklineShapes)
+                            {
+                                <option value="@shape">@shape</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="field-block">
+                        <label for="sleeve-shape">3. Sleeve Shape</label>
+                        <select id="sleeve-shape" class="form-control @(string.IsNullOrWhiteSpace(measurementValues.SleeveShape) ? "placeholder-control" : null)" @bind="measurementValues.SleeveShape">
+                            <option value="" disabled>Select sleeve shape...</option>
+                            @foreach (var shape in MeasurementService.SleeveShapes)
+                            {
+                                <option value="@shape">@shape</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="field-block">
+                        <label for="bodice-design">4. Upper Body / Bodice Design</label>
+                        <select id="bodice-design" class="form-control @(string.IsNullOrWhiteSpace(selectedBodiceDesign) ? "placeholder-control" : null)" @bind="selectedBodiceDesign">
+                            <option value="" disabled>Select bodice design...</option>
+                            @foreach (var design in BodiceDesigns)
+                            {
+                                <option value="@design">@design</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="field-block">
+                        <label for="waist-shape">5. Waist Shape</label>
+                        <select id="waist-shape" class="form-control @(string.IsNullOrWhiteSpace(selectedWaistShape) ? "placeholder-control" : null)" @bind="selectedWaistShape">
+                            <option value="" disabled>Select waist shape...</option>
+                            @foreach (var shape in WaistShapes)
+                            {
+                                <option value="@shape">@shape</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="field-block">
+                        <label for="skirt-design">6. Skirt Design</label>
+                        <select id="skirt-design" class="form-control @(string.IsNullOrWhiteSpace(measurementValues.SkirtShape) ? "placeholder-control" : null)" @bind="measurementValues.SkirtShape">
+                            <option value="" disabled>Select skirt design...</option>
+                            @foreach (var design in MeasurementService.SkirtShapes)
+                            {
+                                <option value="@design">@design</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="field-block">
+                        <label for="fabric-type">7. Fabric Type</label>
+                        <select id="fabric-type" class="form-control @(string.IsNullOrWhiteSpace(selectedFabricType) ? "placeholder-control" : null)" @bind="selectedFabricType">
+                            <option value="" disabled>Select fabric type...</option>
+                            @foreach (var fabric in FabricTypes)
+                            {
+                                <option value="@fabric">@fabric</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="field-block">
+                        <label for="fabric-pattern">8. Fabric Texture / Pattern</label>
+                        <select id="fabric-pattern" class="form-control @(string.IsNullOrWhiteSpace(selectedFabricPattern) ? "placeholder-control" : null)" @bind="selectedFabricPattern">
+                            <option value="" disabled>Select texture or pattern...</option>
+                            @foreach (var pattern in FabricPatterns)
+                            {
+                                <option value="@pattern">@pattern</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="field-block">
+                        <label>9. Color</label>
+                        <div class="swatches" aria-label="Gown color">
+                            @foreach (var color in AvailableColors)
+                            {
+                                <button type="button"
+                                        class="@(selectedColor == color.ColorName ? "selected" : null)"
+                                        style="background:@color.HexCode"
+                                        title="@color.ColorName"
+                                        @onclick="() => selectedColor = color.ColorName"></button>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="field-block">
+                        <label for="accessories">10. Accessories</label>
+                        <select id="accessories" class="form-control @(string.IsNullOrWhiteSpace(selectedAccessories) ? "placeholder-control" : null)" @bind="selectedAccessories">
+                            <option value="" disabled>Select accessories...</option>
+                            @foreach (var accessory in Accessories)
+                            {
+                                <option value="@accessory">@accessory</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="field-block">
+                        <label for="back-closure">11. Back Closure</label>
+                        <select id="back-closure" class="form-control @(string.IsNullOrWhiteSpace(selectedBackClosure) ? "placeholder-control" : null)" @bind="selectedBackClosure">
+                            <option value="" disabled>Select back closure...</option>
+                            @foreach (var closure in BackClosures)
+                            {
+                                <option value="@closure">@closure</option>
+                            }
+                        </select>
+                    </div>
+                </aside>
+
+                <div class="field-block measurements-panel">
+                    <label>12. Measurements <small>(centimeters)</small></label>
                     <div class="measurement-grid">
                         <label>Size
                             <select class="form-control" @bind="measurementValues.Size">
@@ -128,51 +208,26 @@
                         <label>Underarm to Side Waist Seam <input class="form-control" type="number" placeholder="0" min="5" max="60" step=".1" @bind="measurementValues.UnderarmToSideWaistSeam" /></label>
                         <label>Center Neck to Waist Point <input class="form-control" type="number" placeholder="0" min="15" max="90" step=".1" @bind="measurementValues.CenterNeckToWaistPoint" /></label>
                         <label>Cuff Height <input class="form-control" type="number" placeholder="0" min="0" max="30" step=".1" @bind="measurementValues.CuffHeight" /></label>
-                        <label>Skirt Shape
-                            <select class="form-control" @bind="measurementValues.SkirtShape">
-                                <option value="">Select skirt shape...</option>
-                                @foreach (var shape in MeasurementService.SkirtShapes)
-                                {
-                                    <option value="@shape">@shape</option>
-                                }
-                            </select>
-                        </label>
                         <label>Horsehair Edge Hem
-                            <select class="form-control @(measurementValues.HasHorsehairEdgeHem is null ? "placeholder-control" : null)" @bind="measurementValues.HasHorsehairEdgeHem">
+                            <select class="form-control @(measurementValues.HasHorsehairEdgeHem is null ? "placeholder-control" : null)" @bind="HorsehairEdgeHemSelection">
                                 <option value="" disabled>Y/N...</option>
-                                <option value="false">No</option>
-                                <option value="true">Yes</option>
-                            </select>
-                        </label>
-                        <label>Neckline Shape
-                            <select class="form-control" @bind="measurementValues.NecklineShape">
-                                <option value="">Select neckline...</option>
-                                @foreach (var shape in MeasurementService.NecklineShapes)
-                                {
-                                    <option value="@shape">@shape</option>
-                                }
-                            </select>
-                        </label>
-                        <label>Sleeve Shape
-                            <select class="form-control" @bind="measurementValues.SleeveShape">
-                                <option value="">Select sleeve shape...</option>
-                                @foreach (var shape in MeasurementService.SleeveShapes)
-                                {
-                                    <option value="@shape">@shape</option>
-                                }
+                                <option value="no">No</option>
+                                <option value="yes">Yes</option>
                             </select>
                         </label>
                         <label>Built-in Puffy
-                            <select class="form-control @(measurementValues.HasBuiltInPuffy is null ? "placeholder-control" : null)" @bind="measurementValues.HasBuiltInPuffy">
+                            <select class="form-control @(measurementValues.HasBuiltInPuffy is null ? "placeholder-control" : null)" @bind="BuiltInPuffySelection">
                                 <option value="" disabled>Y/N...</option>
-                                <option value="false">No</option>
-                                <option value="true">Yes</option>
+                                <option value="no">No</option>
+                                <option value="yes">Yes</option>
                             </select>
                         </label>
                     </div>
                 </div>
 
+                <section class="right-panel" aria-label="Photo and selection details">
                 <div class="upload-card">
+                    <h2>Upload Photo</h2>
                     <div class="upload-row">
                     <label class="upload-picker" for="photo-upload">
                         <InputFile class="file-input"
@@ -203,14 +258,25 @@
                         <p class="validation-message" role="alert">@photoUploadError</p>
                     }
                 </div>
-                <button type="button" class="generate-button" disabled="@isGenerating" @onclick="GeneratePreviewAsync">
-                    @(isGenerating ? "Generating AI Preview..." : "Generate AI Preview")
-                </button>
-
-                @if (!string.IsNullOrWhiteSpace(generationMessage))
-                {
-                    <p class="generation-message @(generationSucceeded ? "success" : "error")" role="status">@generationMessage</p>
-                }
+                <aside class="selection-card" aria-label="Your selections">
+                    <h3>Your Selection Summary</h3>
+                    <ul>
+                        <li>Template: @(string.IsNullOrWhiteSpace(selectedDressTemplate) ? "Not selected" : selectedDressTemplate)</li>
+                        <li>Neckline: @(string.IsNullOrWhiteSpace(measurementValues.NecklineShape) ? "Not selected" : measurementValues.NecklineShape)</li>
+                        <li>Sleeve: @(string.IsNullOrWhiteSpace(measurementValues.SleeveShape) ? "Not selected" : measurementValues.SleeveShape)</li>
+                        <li>Bodice: @(string.IsNullOrWhiteSpace(selectedBodiceDesign) ? "Not selected" : selectedBodiceDesign)</li>
+                        <li>Waist: @(string.IsNullOrWhiteSpace(selectedWaistShape) ? "Not selected" : selectedWaistShape)</li>
+                        <li>Skirt: @(string.IsNullOrWhiteSpace(measurementValues.SkirtShape) ? "Not selected" : measurementValues.SkirtShape)</li>
+                        <li>Fabric: @(string.IsNullOrWhiteSpace(selectedFabricType) ? "Not selected" : selectedFabricType)</li>
+                        <li>Texture: @(string.IsNullOrWhiteSpace(selectedFabricPattern) ? "Not selected" : selectedFabricPattern)</li>
+                        <li>Color: @(string.IsNullOrWhiteSpace(selectedColor) ? "Not selected" : selectedColor)</li>
+                        <li>Accessories: @(string.IsNullOrWhiteSpace(selectedAccessories) ? "Not selected" : selectedAccessories)</li>
+                        <li>Closure: @(string.IsNullOrWhiteSpace(selectedBackClosure) ? "Not selected" : selectedBackClosure)</li>
+                        <li>Measurements: @(string.IsNullOrWhiteSpace(measurementValues.Size) ? "Not entered" : $"{measurementValues.Size} size entered")</li>
+                        <li>Photo: @(uploadedPhotoFileName is null ? "Not uploaded" : uploadedPhotoFileName)</li>
+                    </ul>
+                </aside>
+                </section>
             </div>
         </section>
 
@@ -264,31 +330,33 @@
                 </figure>
             </div>
 
+            <button type="button" class="generate-button" disabled="@isGenerating" @onclick="GeneratePreviewAsync">
+                @(isGenerating ? "Generating AI Preview..." : "Generate AI Preview")
+            </button>
+
+            @if (!string.IsNullOrWhiteSpace(generationMessage))
+            {
+                <p class="generation-message @(generationSucceeded ? "success" : "error")" role="status">@generationMessage</p>
+            }
+
             <div class="preview-note">
                 <span>ⓘ</span>
                 <p>The AI preview is generated for visualization purposes only. Final gown fit, fabric behavior, and appearance may vary.</p>
             </div>
-
-            <aside class="selection-card" aria-label="Your selections">
-                <h3>Your Selections</h3>
-                <ul>
-                    <li>Style: @(string.IsNullOrWhiteSpace(selectedStyle) ? "Not selected" : selectedStyle)</li>
-                    <li>Fabric: @(string.IsNullOrWhiteSpace(selectedFabric) ? "Not selected" : selectedFabric)</li>
-                    <li>Color: @(string.IsNullOrWhiteSpace(selectedColor) ? "Not selected" : selectedColor)</li>
-                    <li>Specifications: Garment details entered</li>
-                    <li>Horsehair Edge Hem: @FormatYesNo(measurementValues.HasHorsehairEdgeHem)</li>
-                    <li>Built-in Puffy: @FormatYesNo(measurementValues.HasBuiltInPuffy)</li>
-                    <li>Photo: @(uploadedPhotoFileName is null ? "Not uploaded" : uploadedPhotoFileName)</li>
-                </ul>
-            </aside>
         </section>
+
     </main>
 </div>
 
 @code {
-    private string selectedStyle = string.Empty;
-    private string selectedFabric = string.Empty;
+    private string selectedDressTemplate = string.Empty;
+    private string selectedBodiceDesign = string.Empty;
+    private string selectedWaistShape = string.Empty;
+    private string selectedFabricType = string.Empty;
+    private string selectedFabricPattern = string.Empty;
     private string selectedColor = string.Empty;
+    private string selectedAccessories = string.Empty;
+    private string selectedBackClosure = string.Empty;
     private string? uploadedPhotoDataUrl;
     private string? uploadedPhotoFileName;
     private string? photoUploadError;
@@ -305,6 +373,61 @@
 
     private const long MaxPhotoBytes = 10 * 1024 * 1024;
 
+    private static readonly IReadOnlyList<string> DressTemplates =
+    [
+        "Textured Drop-Waist Tiered Gown",
+        "Layered Tulle Princess Gown",
+        "Structured Drop-Waist Pouf Gown",
+        "Basque-Waist Metallic Ball Gown",
+        "Ivory Brocade A-Line Gown with Side Bow",
+        "Soft Satin Drop-Waist Gown"
+    ];
+
+    private static readonly IReadOnlyList<string> BodiceDesigns =
+    [
+        "Plain Fitted Bodice",
+        "Princess Seam Bodice",
+        "Textured Bodice",
+        "Floral Applique Bodice",
+        "Metallic Brocade Bodice",
+        "Basque Waist Bodice",
+        "Structured Shoulder Bodice",
+        "Side-Draped Bodice"
+    ];
+
+    private static readonly IReadOnlyList<string> WaistShapes =
+    [
+        "Natural Waist",
+        "Drop Waist",
+        "Basque Waist",
+        "Gathered Waist",
+        "Built-In Waist Seam",
+        "Side Bow Waist",
+        "No Belt"
+    ];
+
+    private static readonly IReadOnlyList<string> FabricTypes =
+    [
+        "Satin", "Taffeta", "Mikado", "Tulle", "Layered Tulle", "Metallic Brocade",
+        "Jacquard", "Textured Jacquard", "Embroidered Fabric", "Lace", "Organza"
+    ];
+
+    private static readonly IReadOnlyList<string> FabricPatterns =
+    [
+        "Plain Smooth", "Metallic Shine", "Raised Texture", "Floral Embroidery", "Gold Brocade",
+        "Silver Brocade", "Jacquard Pattern", "Sequin Texture", "Soft Sheer Layers"
+    ];
+
+    private static readonly IReadOnlyList<string> Accessories =
+    [
+        "None", "Side Bow", "Detachable Belt", "Floral Applique", "Beaded Detail"
+    ];
+
+    private static readonly IReadOnlyList<string> BackClosures =
+    [
+        "Hidden Zipper", "Corset Lace-Up", "Covered Buttons", "Side Zipper"
+    ];
+
     private static readonly HashSet<string> AllowedPhotoExtensions = new(StringComparer.OrdinalIgnoreCase)
     {
         ".jpg",
@@ -320,18 +443,35 @@
         "image/webp"
     };
 
-    private readonly Step[] steps =
-    [
-        new(1, "Style & Design", "Select your gown style"),
-        new(2, "Fabric & Color", "Choose fabric and color"),
-        new(3, "Measurements", "Enter your measurements"),
-        new(4, "Upload Photo", "Upload your photo"),
-        new(5, "AI Preview", "Generate your preview")
-    ];
+    private IEnumerable<FabricColorDto> AvailableColors => catalogFabrics
+        .SelectMany(fabric => fabric.Colors)
+        .DistinctBy(color => color.ColorName);
 
-    private FabricDto? SelectedFabric => catalogFabrics.FirstOrDefault(fabric => fabric.Name == selectedFabric);
+    private string HorsehairEdgeHemSelection
+    {
+        get => ToSelectionValue(measurementValues.HasHorsehairEdgeHem);
+        set => measurementValues.HasHorsehairEdgeHem = ToNullableBoolean(value);
+    }
 
-    private string GetStepClass(int stepNumber) => stepNumber == 1 ? "active" : string.Empty;
+    private string BuiltInPuffySelection
+    {
+        get => ToSelectionValue(measurementValues.HasBuiltInPuffy);
+        set => measurementValues.HasBuiltInPuffy = ToNullableBoolean(value);
+    }
+
+    private static string ToSelectionValue(bool? value) => value switch
+    {
+        true => "yes",
+        false => "no",
+        null => string.Empty
+    };
+
+    private static bool? ToNullableBoolean(string value) => value switch
+    {
+        "yes" => true,
+        "no" => false,
+        _ => null
+    };
 
     private static string GetEmail(System.Security.Claims.ClaimsPrincipal user)
     {
@@ -340,24 +480,10 @@
             ?? "Admin";
     }
 
-    private static string FormatYesNo(bool? value) => value switch
-    {
-        true => "Yes",
-        false => "No",
-        null => "Not selected"
-    };
-
     protected override async Task OnInitializedAsync()
     {
         catalogStyles = await VisualizerService.GetStylesAsync();
         catalogFabrics = await VisualizerService.GetFabricsAsync();
-    }
-
-    private void OnFabricChanged()
-    {
-        selectedColor = SelectedFabric?.Colors.FirstOrDefault(color => color.ColorName == selectedColor)?.ColorName
-            ?? SelectedFabric?.Colors.FirstOrDefault()?.ColorName
-            ?? string.Empty;
     }
 
     private async Task OnPhotoSelected(InputFileChangeEventArgs args)
@@ -412,14 +538,32 @@
             return;
         }
 
-        var style = catalogStyles.FirstOrDefault(item => item.Name == selectedStyle);
-        var fabric = catalogFabrics.FirstOrDefault(item => item.Name == selectedFabric);
-        var color = fabric?.Colors.FirstOrDefault(item => item.ColorName == selectedColor)
-            ?? fabric?.Colors.FirstOrDefault();
+        if (string.IsNullOrWhiteSpace(selectedDressTemplate)
+            || string.IsNullOrWhiteSpace(measurementValues.NecklineShape)
+            || string.IsNullOrWhiteSpace(measurementValues.SleeveShape)
+            || string.IsNullOrWhiteSpace(selectedBodiceDesign)
+            || string.IsNullOrWhiteSpace(selectedWaistShape)
+            || string.IsNullOrWhiteSpace(measurementValues.SkirtShape)
+            || string.IsNullOrWhiteSpace(selectedFabricType)
+            || string.IsNullOrWhiteSpace(selectedFabricPattern)
+            || string.IsNullOrWhiteSpace(selectedColor)
+            || string.IsNullOrWhiteSpace(selectedAccessories)
+            || string.IsNullOrWhiteSpace(selectedBackClosure))
+        {
+            generationMessage = "Complete all dress builder selections before generating your AI preview.";
+            return;
+        }
+
+        var style = catalogStyles.FirstOrDefault();
+        var selectedCatalogColor = catalogFabrics
+            .SelectMany(fabric => fabric.Colors.Select(color => (Fabric: fabric, Color: color)))
+            .FirstOrDefault(item => item.Color.ColorName == selectedColor);
+        var fabric = selectedCatalogColor.Fabric;
+        var color = selectedCatalogColor.Color;
 
         if (style is null || fabric is null || color is null)
         {
-            generationMessage = "The selected style, fabric, or color is unavailable.";
+            generationMessage = "The selected color is unavailable in the current catalog.";
             return;
         }
 
@@ -443,7 +587,17 @@
                     DressStyleId = style.Id,
                     FabricId = fabric.Id,
                     FabricColorId = color.Id,
-                    Measurement = measurementValues
+                    Measurement = measurementValues,
+                    DesignSelection = new DesignSelectionDto
+                    {
+                        DressTemplate = selectedDressTemplate,
+                        BodiceDesign = selectedBodiceDesign,
+                        WaistShape = selectedWaistShape,
+                        FabricType = selectedFabricType,
+                        FabricPattern = selectedFabricPattern,
+                        Accessories = selectedAccessories,
+                        BackClosure = selectedBackClosure
+                    }
                 },
                 uploadedPhotoUrl);
 
@@ -471,7 +625,4 @@
             isGenerating = false;
         }
     }
-
-    private sealed record Step(int Number, string Title, string Description);
-
 }

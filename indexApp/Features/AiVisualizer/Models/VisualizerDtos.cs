@@ -99,6 +99,18 @@ public sealed class CreateVisualizerRequestDto
     public Guid FabricId { get; set; }
     public Guid FabricColorId { get; set; }
     public MeasurementDto Measurement { get; set; } = new();
+    public DesignSelectionDto? DesignSelection { get; set; }
+}
+
+public sealed class DesignSelectionDto
+{
+    public string DressTemplate { get; set; } = string.Empty;
+    public string BodiceDesign { get; set; } = string.Empty;
+    public string WaistShape { get; set; } = string.Empty;
+    public string FabricType { get; set; } = string.Empty;
+    public string FabricPattern { get; set; } = string.Empty;
+    public string Accessories { get; set; } = string.Empty;
+    public string BackClosure { get; set; } = string.Empty;
 }
 
 public sealed record GenerateAiPreviewRequest(
@@ -119,6 +131,7 @@ public sealed record VisualizerRequestDetailsDto(
     FabricDto Fabric,
     FabricColorDto FabricColor,
     MeasurementDto Measurement,
+    DesignSelectionDto? DesignSelection,
     string? UploadedPhotoUrl,
     string? BasicPreviewUrl,
     string? PromptUsed,

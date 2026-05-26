@@ -114,6 +114,13 @@ public sealed class AiVisualizerDbContext : DbContext
             entity.Property(request => request.FabricId).HasColumnName("fabric_id");
             entity.Property(request => request.FabricColorId).HasColumnName("fabric_color_id");
             entity.Property(request => request.MeasurementId).HasColumnName("measurement_id");
+            entity.Property(request => request.DressTemplate).HasColumnName("dress_template").HasMaxLength(120);
+            entity.Property(request => request.BodiceDesign).HasColumnName("bodice_design").HasMaxLength(120);
+            entity.Property(request => request.WaistShape).HasColumnName("waist_shape").HasMaxLength(120);
+            entity.Property(request => request.FabricType).HasColumnName("fabric_type").HasMaxLength(120);
+            entity.Property(request => request.FabricPattern).HasColumnName("fabric_pattern").HasMaxLength(120);
+            entity.Property(request => request.Accessories).HasColumnName("accessories").HasMaxLength(120);
+            entity.Property(request => request.BackClosure).HasColumnName("back_closure").HasMaxLength(120);
             entity.Property(request => request.UploadedPhotoUrl).HasColumnName("uploaded_photo_url").HasMaxLength(500);
             entity.Property(request => request.BasicPreviewUrl).HasColumnName("basic_preview_url").HasMaxLength(500);
             entity.Property(request => request.PromptUsed).HasColumnName("prompt_used").HasMaxLength(3000);

@@ -118,10 +118,10 @@
                                 </InputSelect>
                             </label>
                             <label>Horsehair Edge Hem
-                                <InputSelect class="@($"form-control {(measurements.HasHorsehairEdgeHem is null ? "placeholder-control" : null)}")" @bind-Value="measurements.HasHorsehairEdgeHem">
+                                <InputSelect class="@($"form-control {(measurements.HasHorsehairEdgeHem is null ? "placeholder-control" : null)}")" @bind-Value="HorsehairEdgeHemSelection">
                                     <option value="" disabled>Y/N...</option>
-                                    <option value="false">No</option>
-                                    <option value="true">Yes</option>
+                                    <option value="no">No</option>
+                                    <option value="yes">Yes</option>
                                 </InputSelect>
                             </label>
                             <label>Neckline Shape
@@ -143,10 +143,10 @@
                                 </InputSelect>
                             </label>
                             <label>Built-in Puffy
-                                <InputSelect class="@($"form-control {(measurements.HasBuiltInPuffy is null ? "placeholder-control" : null)}")" @bind-Value="measurements.HasBuiltInPuffy">
+                                <InputSelect class="@($"form-control {(measurements.HasBuiltInPuffy is null ? "placeholder-control" : null)}")" @bind-Value="BuiltInPuffySelection">
                                     <option value="" disabled>Y/N...</option>
-                                    <option value="false">No</option>
-                                    <option value="true">Yes</option>
+                                    <option value="no">No</option>
+                                    <option value="yes">Yes</option>
                                 </InputSelect>
                             </label>
                         </div>
@@ -250,6 +250,32 @@
     private FabricDto? SelectedFabric => fabrics.FirstOrDefault(fabric => fabric.Id == selectedFabricId);
 
     private FabricColorDto? SelectedColor => SelectedFabric?.Colors.FirstOrDefault(color => color.Id == selectedColorId);
+
+    private string HorsehairEdgeHemSelection
+    {
+        get => ToSelectionValue(measurements.HasHorsehairEdgeHem);
+        set => measurements.HasHorsehairEdgeHem = ToNullableBoolean(value);
+    }
+
+    private string BuiltInPuffySelection
+    {
+        get => ToSelectionValue(measurements.HasBuiltInPuffy);
+        set => measurements.HasBuiltInPuffy = ToNullableBoolean(value);
+    }
+
+    private static string ToSelectionValue(bool? value) => value switch
+    {
+        true => "yes",
+        false => "no",
+        null => string.Empty
+    };
+
+    private static bool? ToNullableBoolean(string value) => value switch
+    {
+        "yes" => true,
+        "no" => false,
+        _ => null
+    };
 
     private string PreviewCss
     {

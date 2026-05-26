@@ -10,13 +10,16 @@ public sealed class PromptBuilder
         var fabric = request.Fabric ?? throw new InvalidOperationException("Request fabric was not loaded.");
         var color = request.FabricColor ?? throw new InvalidOperationException("Request color was not loaded.");
         var measurement = request.Measurement ?? throw new InvalidOperationException("Request measurement was not loaded.");
+        var dressTemplate = request.DressTemplate ?? style.Name;
+        var fabricType = request.FabricType ?? fabric.Name;
 
         return
-            $"Edit the provided front-facing full-body photo so the same person is realistically wearing a {color.ColorName} {fabric.Name} {style.Name}. " +
+            $"Edit the provided front-facing full-body photo so the same person is realistically wearing a {color.ColorName} {fabricType} {dressTemplate}. " +
             "Preserve the person's face, identity, skin tone, hair, body position, proportions, and visible background; change only the outfit as needed for the gown visualization. " +
             "Compose the output as a full-length portrait with the entire head, hair, body, gown hem, and both feet visible inside the frame. Do not crop the head, face, feet, or dress hem, and do not zoom in. " +
-            $"Use the selected gown design: silhouette {style.Silhouette}, neckline {style.Neckline}, sleeve type {style.SleeveType}, dress length {style.DressLength}. " +
-            $"Use garment size {measurement.Size} and construction choices: {measurement.SkirtShape} skirt, {measurement.NecklineShape} neckline, {measurement.SleeveShape} sleeve, " +
+            $"Use the selected gown design: neckline {measurement.NecklineShape}, sleeve type {measurement.SleeveShape}, skirt design {measurement.SkirtShape}, bodice {request.BodiceDesign ?? style.Silhouette}, waist {request.WaistShape ?? "natural waist"}, dress length {style.DressLength}. " +
+            $"Use fabric texture or pattern {request.FabricPattern ?? fabric.Description}, accessories {request.Accessories ?? "none"}, and back closure {request.BackClosure ?? "standard concealed closure"}. " +
+            $"Use garment size {measurement.Size} and additional construction choices: " +
             $"horsehair edge hem {(measurement.HasHorsehairEdgeHem ? "yes" : "no")}, built-in puffy {(measurement.HasBuiltInPuffy ? "yes" : "no")}. " +
             $"Reflect approximate garment measurements in centimeters: chest {measurement.Chest} cm, waist {measurement.Waist} cm, shoulder to shoulder {measurement.ShoulderToShoulder} cm, " +
             $"shoulder to waist seam {measurement.ShoulderToWaistSeam} cm, shoulder to hem {measurement.ShoulderToHem} cm, sleeve length {measurement.SleeveLength} cm, " +

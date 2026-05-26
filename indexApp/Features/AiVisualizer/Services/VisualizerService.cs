@@ -259,6 +259,13 @@ public sealed class VisualizerService
             FabricId = dto.FabricId,
             FabricColorId = dto.FabricColorId,
             Measurement = measurement,
+            DressTemplate = dto.DesignSelection?.DressTemplate,
+            BodiceDesign = dto.DesignSelection?.BodiceDesign,
+            WaistShape = dto.DesignSelection?.WaistShape,
+            FabricType = dto.DesignSelection?.FabricType,
+            FabricPattern = dto.DesignSelection?.FabricPattern,
+            Accessories = dto.DesignSelection?.Accessories,
+            BackClosure = dto.DesignSelection?.BackClosure,
             UploadedPhotoUrl = uploadedPhotoUrl,
             Status = VisualizerRequestStatus.Draft
         };
@@ -405,8 +412,8 @@ public sealed class VisualizerService
             .OrderByDescending(preview => preview.CreatedAt)
             .Select(preview => new PreviewHistoryItemDto(
                 preview.VisualizerRequestId,
-                preview.VisualizerRequest!.DressStyle!.Name,
-                preview.VisualizerRequest.Fabric!.Name,
+                preview.VisualizerRequest!.DressTemplate ?? preview.VisualizerRequest.DressStyle!.Name,
+                preview.VisualizerRequest.FabricType ?? preview.VisualizerRequest.Fabric!.Name,
                 preview.VisualizerRequest.FabricColor!.ColorName,
                 preview.ImageUrl,
                 preview.CreatedAt))
@@ -480,7 +487,7 @@ public sealed class VisualizerService
         {
             var generationRequest = new GownVisualizationRequest(
                 ProductId: request.DressStyleId.ToString(),
-                ProductTitle: request.DressStyle!.Name,
+                ProductTitle: request.DressTemplate ?? request.DressStyle!.Name,
                 CustomerImageFileName: request.UploadedPhotoUrl ?? "basic-preview",
                 CustomerImageContentType: GetImageContentType(request.UploadedPhotoUrl),
                 GarmentImageUrl: null,
@@ -617,6 +624,18 @@ public sealed class VisualizerService
                 SleeveShape = measurement.SleeveShape,
                 HasBuiltInPuffy = measurement.HasBuiltInPuffy
             },
+            HasDesignSelection(request)
+                ? new DesignSelectionDto
+                {
+                    DressTemplate = request.DressTemplate ?? string.Empty,
+                    BodiceDesign = request.BodiceDesign ?? string.Empty,
+                    WaistShape = request.WaistShape ?? string.Empty,
+                    FabricType = request.FabricType ?? string.Empty,
+                    FabricPattern = request.FabricPattern ?? string.Empty,
+                    Accessories = request.Accessories ?? string.Empty,
+                    BackClosure = request.BackClosure ?? string.Empty
+                }
+                : null,
             request.UploadedPhotoUrl is null ? null : GetUploadedPhotoImageUrl(request.Id),
             request.BasicPreviewUrl,
             request.PromptUsed,
@@ -624,6 +643,17 @@ public sealed class VisualizerService
             request.ErrorMessage,
             latestPreview is null ? null : GetPreviewImageUrl(request.Id),
             request.CreatedAt);
+    }
+
+    private static bool HasDesignSelection(VisualizerRequest request)
+    {
+        return !string.IsNullOrWhiteSpace(request.DressTemplate)
+            || !string.IsNullOrWhiteSpace(request.BodiceDesign)
+            || !string.IsNullOrWhiteSpace(request.WaistShape)
+            || !string.IsNullOrWhiteSpace(request.FabricType)
+            || !string.IsNullOrWhiteSpace(request.FabricPattern)
+            || !string.IsNullOrWhiteSpace(request.Accessories)
+            || !string.IsNullOrWhiteSpace(request.BackClosure);
     }
 
     private static string GetUploadedPhotoImageUrl(Guid requestId)
