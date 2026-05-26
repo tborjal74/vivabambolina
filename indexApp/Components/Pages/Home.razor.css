@@ -425,6 +425,12 @@
         #f1e3dc;
 }
 
+.empty-upload-icon {
+    object-fit: contain;
+    padding: .4rem;
+    background: #fff;
+}
+
 .photo-thumb {
     position: relative;
     width: 5rem;
