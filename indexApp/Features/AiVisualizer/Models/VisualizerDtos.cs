@@ -29,29 +29,66 @@ public sealed record FabricColorDto(
 
 public sealed class MeasurementDto
 {
-    [Range(90, 245)]
-    public decimal Height { get; set; } = 165;
+    [Required]
+    public string Size { get; set; } = string.Empty;
 
-    [Range(50, 205)]
-    public decimal Bust { get; set; } = 86;
+    [Required, Range(50, 205)]
+    public decimal? Chest { get; set; }
 
-    [Range(45, 180)]
-    public decimal Waist { get; set; } = 66;
+    [Required, Range(45, 180)]
+    public decimal? Waist { get; set; }
 
-    [Range(50, 220)]
-    public decimal Hips { get; set; } = 91;
+    [Required, Range(20, 82)]
+    public decimal? ShoulderToShoulder { get; set; }
 
-    [Range(20, 82)]
-    public decimal ShoulderWidth { get; set; } = 38;
+    [Required, Range(20, 80)]
+    public decimal? ShoulderToWaistSeam { get; set; }
 
-    [Range(50, 230)]
-    public decimal DressLength { get; set; } = 147;
+    [Required, Range(50, 230)]
+    public decimal? ShoulderToHem { get; set; }
 
-    [Range(0, 102)]
-    public decimal SleeveLength { get; set; } = 56;
+    [Required, Range(0, 102)]
+    public decimal? SleeveLength { get; set; }
 
-    [Range(10, 41)]
-    public decimal Wrist { get; set; } = 15;
+    [Required, Range(15, 70)]
+    public decimal? Bicep { get; set; }
+
+    [Required, Range(10, 41)]
+    public decimal? EndOfSleeve { get; set; }
+
+    [Required, Range(5, 35)]
+    public decimal? ShoulderToSideNeck { get; set; }
+
+    [Required, Range(5, 60)]
+    public decimal? ShoulderToNeckOpening { get; set; }
+
+    [Required, Range(0, 25)]
+    public decimal? MockNeckHeight { get; set; }
+
+    [Required, Range(0, 80)]
+    public decimal? MockNeckCircumference { get; set; }
+
+    [Required, Range(5, 60)]
+    public decimal? UnderarmToSideWaistSeam { get; set; }
+
+    [Required, Range(15, 90)]
+    public decimal? CenterNeckToWaistPoint { get; set; }
+
+    [Required, Range(0, 30)]
+    public decimal? CuffHeight { get; set; }
+
+    [Required]
+    public string SkirtShape { get; set; } = string.Empty;
+
+    public bool HasHorsehairEdgeHem { get; set; }
+
+    [Required]
+    public string NecklineShape { get; set; } = string.Empty;
+
+    [Required]
+    public string SleeveShape { get; set; } = string.Empty;
+
+    public bool HasBuiltInPuffy { get; set; }
 }
 
 public sealed class CreateVisualizerRequestDto

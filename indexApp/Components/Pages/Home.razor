@@ -102,16 +102,71 @@
                 </div>
 
                 <div class="field-block">
-                    <label>3. Measurements <small>(centimeters)</small></label>
+                    <label>3. Dress/Gown Specifications <small>(measurements in centimeters)</small></label>
                     <div class="measurement-grid">
-                        <label>Height <input class="form-control" type="number" min="90" max="245" step=".1" @bind="measurementValues.Height" /></label>
-                        <label>Bust <input class="form-control" type="number" min="50" max="205" step=".1" @bind="measurementValues.Bust" /></label>
-                        <label>Waist <input class="form-control" type="number" min="45" max="180" step=".1" @bind="measurementValues.Waist" /></label>
-                        <label>Hips <input class="form-control" type="number" min="50" max="220" step=".1" @bind="measurementValues.Hips" /></label>
-                        <label>Shoulder Width <input class="form-control" type="number" min="20" max="82" step=".1" @bind="measurementValues.ShoulderWidth" /></label>
-                        <label>Dress Length <input class="form-control" type="number" min="50" max="230" step=".1" @bind="measurementValues.DressLength" /></label>
-                        <label>Sleeve Length <input class="form-control" type="number" min="0" max="102" step=".1" @bind="measurementValues.SleeveLength" /></label>
-                        <label>Wrist <input class="form-control" type="number" min="10" max="41" step=".1" @bind="measurementValues.Wrist" /></label>
+                        <label>Size
+                            <select class="form-control" @bind="measurementValues.Size">
+                                <option value="">Select size...</option>
+                                @foreach (var size in MeasurementService.Sizes)
+                                {
+                                    <option value="@size">@size</option>
+                                }
+                            </select>
+                        </label>
+                        <label>Chest <input class="form-control" type="number" placeholder="0" min="50" max="205" step=".1" @bind="measurementValues.Chest" /></label>
+                        <label>Waist <input class="form-control" type="number" placeholder="0" min="45" max="180" step=".1" @bind="measurementValues.Waist" /></label>
+                        <label>Shoulder to Shoulder <input class="form-control" type="number" placeholder="0" min="20" max="82" step=".1" @bind="measurementValues.ShoulderToShoulder" /></label>
+                        <label>Shoulder to Waist Seam <input class="form-control" type="number" placeholder="0" min="20" max="80" step=".1" @bind="measurementValues.ShoulderToWaistSeam" /></label>
+                        <label>Shoulder to Hem <input class="form-control" type="number" placeholder="0" min="50" max="230" step=".1" @bind="measurementValues.ShoulderToHem" /></label>
+                        <label>Sleeve Length <input class="form-control" type="number" placeholder="0" min="0" max="102" step=".1" @bind="measurementValues.SleeveLength" /></label>
+                        <label>Bicep <input class="form-control" type="number" placeholder="0" min="15" max="70" step=".1" @bind="measurementValues.Bicep" /></label>
+                        <label>End of Sleeve <input class="form-control" type="number" placeholder="0" min="10" max="41" step=".1" @bind="measurementValues.EndOfSleeve" /></label>
+                        <label>Shoulder to Side Neck <input class="form-control" type="number" placeholder="0" min="5" max="35" step=".1" @bind="measurementValues.ShoulderToSideNeck" /></label>
+                        <label>Shoulder to Neck Opening <input class="form-control" type="number" placeholder="0" min="5" max="60" step=".1" @bind="measurementValues.ShoulderToNeckOpening" /></label>
+                        <label>Mock Neck Height <input class="form-control" type="number" placeholder="0" min="0" max="25" step=".1" @bind="measurementValues.MockNeckHeight" /></label>
+                        <label>Mock Neck Circumference <input class="form-control" type="number" placeholder="0" min="0" max="80" step=".1" @bind="measurementValues.MockNeckCircumference" /></label>
+                        <label>Underarm to Side Waist Seam <input class="form-control" type="number" placeholder="0" min="5" max="60" step=".1" @bind="measurementValues.UnderarmToSideWaistSeam" /></label>
+                        <label>Center Neck to Waist Point <input class="form-control" type="number" placeholder="0" min="15" max="90" step=".1" @bind="measurementValues.CenterNeckToWaistPoint" /></label>
+                        <label>Cuff Height <input class="form-control" type="number" placeholder="0" min="0" max="30" step=".1" @bind="measurementValues.CuffHeight" /></label>
+                        <label>Skirt Shape
+                            <select class="form-control" @bind="measurementValues.SkirtShape">
+                                <option value="">Select skirt shape...</option>
+                                @foreach (var shape in MeasurementService.SkirtShapes)
+                                {
+                                    <option value="@shape">@shape</option>
+                                }
+                            </select>
+                        </label>
+                        <label>Horsehair Edge Hem
+                            <select class="form-control" @bind="measurementValues.HasHorsehairEdgeHem">
+                                <option value="false">No</option>
+                                <option value="true">Yes</option>
+                            </select>
+                        </label>
+                        <label>Neckline Shape
+                            <select class="form-control" @bind="measurementValues.NecklineShape">
+                                <option value="">Select neckline...</option>
+                                @foreach (var shape in MeasurementService.NecklineShapes)
+                                {
+                                    <option value="@shape">@shape</option>
+                                }
+                            </select>
+                        </label>
+                        <label>Sleeve Shape
+                            <select class="form-control" @bind="measurementValues.SleeveShape">
+                                <option value="">Select sleeve shape...</option>
+                                @foreach (var shape in MeasurementService.SleeveShapes)
+                                {
+                                    <option value="@shape">@shape</option>
+                                }
+                            </select>
+                        </label>
+                        <label>Built-in Puffy
+                            <select class="form-control" @bind="measurementValues.HasBuiltInPuffy">
+                                <option value="false">No</option>
+                                <option value="true">Yes</option>
+                            </select>
+                        </label>
                     </div>
                 </div>
 
@@ -208,7 +263,7 @@
                     <li>Style: @(string.IsNullOrWhiteSpace(selectedStyle) ? "Not selected" : selectedStyle)</li>
                     <li>Fabric: @(string.IsNullOrWhiteSpace(selectedFabric) ? "Not selected" : selectedFabric)</li>
                     <li>Color: @(string.IsNullOrWhiteSpace(selectedColor) ? "Not selected" : selectedColor)</li>
-                    <li>Measurements: 8 values entered</li>
+                    <li>Specifications: Garment details entered</li>
                     <li>Photo: @(uploadedPhotoFileName is null ? "Not uploaded" : uploadedPhotoFileName)</li>
                 </ul>
             </aside>

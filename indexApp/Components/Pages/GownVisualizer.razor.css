@@ -176,6 +176,12 @@
     font-weight: 800;
 }
 
+::deep .measurement-grid .form-control::placeholder {
+    color: #827875;
+    font-style: italic;
+    opacity: 1;
+}
+
 .upload-card,
 .alert-list,
 .ai-output {

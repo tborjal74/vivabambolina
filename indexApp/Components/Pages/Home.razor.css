@@ -330,6 +330,12 @@
     font-weight: 800;
 }
 
+.measurement-grid .form-control::placeholder {
+    color: #827875;
+    font-style: italic;
+    opacity: 1;
+}
+
 .upload-card {
     display: grid;
     gap: .45rem;

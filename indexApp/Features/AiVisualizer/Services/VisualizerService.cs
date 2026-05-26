@@ -229,14 +229,27 @@ public sealed class VisualizerService
         var measurement = new CustomerMeasurement
         {
             UserId = userId,
-            Height = dto.Measurement.Height,
-            Bust = dto.Measurement.Bust,
-            Waist = dto.Measurement.Waist,
-            Hips = dto.Measurement.Hips,
-            ShoulderWidth = dto.Measurement.ShoulderWidth,
-            DressLength = dto.Measurement.DressLength,
-            SleeveLength = dto.Measurement.SleeveLength,
-            Wrist = dto.Measurement.Wrist
+            Size = dto.Measurement.Size,
+            Chest = dto.Measurement.Chest!.Value,
+            Waist = dto.Measurement.Waist!.Value,
+            ShoulderToShoulder = dto.Measurement.ShoulderToShoulder!.Value,
+            ShoulderToWaistSeam = dto.Measurement.ShoulderToWaistSeam!.Value,
+            ShoulderToHem = dto.Measurement.ShoulderToHem!.Value,
+            SleeveLength = dto.Measurement.SleeveLength!.Value,
+            Bicep = dto.Measurement.Bicep!.Value,
+            EndOfSleeve = dto.Measurement.EndOfSleeve!.Value,
+            ShoulderToSideNeck = dto.Measurement.ShoulderToSideNeck!.Value,
+            ShoulderToNeckOpening = dto.Measurement.ShoulderToNeckOpening!.Value,
+            MockNeckHeight = dto.Measurement.MockNeckHeight!.Value,
+            MockNeckCircumference = dto.Measurement.MockNeckCircumference!.Value,
+            UnderarmToSideWaistSeam = dto.Measurement.UnderarmToSideWaistSeam!.Value,
+            CenterNeckToWaistPoint = dto.Measurement.CenterNeckToWaistPoint!.Value,
+            CuffHeight = dto.Measurement.CuffHeight!.Value,
+            SkirtShape = dto.Measurement.SkirtShape,
+            HasHorsehairEdgeHem = dto.Measurement.HasHorsehairEdgeHem,
+            NecklineShape = dto.Measurement.NecklineShape,
+            SleeveShape = dto.Measurement.SleeveShape,
+            HasBuiltInPuffy = dto.Measurement.HasBuiltInPuffy
         };
 
         var request = new VisualizerRequest
@@ -323,14 +336,27 @@ public sealed class VisualizerService
             return null;
         }
 
-        request.Measurement.Height = dto.Height;
-        request.Measurement.Bust = dto.Bust;
-        request.Measurement.Waist = dto.Waist;
-        request.Measurement.Hips = dto.Hips;
-        request.Measurement.ShoulderWidth = dto.ShoulderWidth;
-        request.Measurement.DressLength = dto.DressLength;
-        request.Measurement.SleeveLength = dto.SleeveLength;
-        request.Measurement.Wrist = dto.Wrist;
+        request.Measurement.Size = dto.Size;
+        request.Measurement.Chest = dto.Chest!.Value;
+        request.Measurement.Waist = dto.Waist!.Value;
+        request.Measurement.ShoulderToShoulder = dto.ShoulderToShoulder!.Value;
+        request.Measurement.ShoulderToWaistSeam = dto.ShoulderToWaistSeam!.Value;
+        request.Measurement.ShoulderToHem = dto.ShoulderToHem!.Value;
+        request.Measurement.SleeveLength = dto.SleeveLength!.Value;
+        request.Measurement.Bicep = dto.Bicep!.Value;
+        request.Measurement.EndOfSleeve = dto.EndOfSleeve!.Value;
+        request.Measurement.ShoulderToSideNeck = dto.ShoulderToSideNeck!.Value;
+        request.Measurement.ShoulderToNeckOpening = dto.ShoulderToNeckOpening!.Value;
+        request.Measurement.MockNeckHeight = dto.MockNeckHeight!.Value;
+        request.Measurement.MockNeckCircumference = dto.MockNeckCircumference!.Value;
+        request.Measurement.UnderarmToSideWaistSeam = dto.UnderarmToSideWaistSeam!.Value;
+        request.Measurement.CenterNeckToWaistPoint = dto.CenterNeckToWaistPoint!.Value;
+        request.Measurement.CuffHeight = dto.CuffHeight!.Value;
+        request.Measurement.SkirtShape = dto.SkirtShape;
+        request.Measurement.HasHorsehairEdgeHem = dto.HasHorsehairEdgeHem;
+        request.Measurement.NecklineShape = dto.NecklineShape;
+        request.Measurement.SleeveShape = dto.SleeveShape;
+        request.Measurement.HasBuiltInPuffy = dto.HasBuiltInPuffy;
         request.Measurement.UpdatedAt = DateTimeOffset.UtcNow;
         request.UpdatedAt = DateTimeOffset.UtcNow;
 
@@ -569,14 +595,27 @@ public sealed class VisualizerService
             ToDto(request.FabricColor!),
             new MeasurementDto
             {
-                Height = measurement.Height,
-                Bust = measurement.Bust,
+                Size = measurement.Size,
+                Chest = measurement.Chest,
                 Waist = measurement.Waist,
-                Hips = measurement.Hips,
-                ShoulderWidth = measurement.ShoulderWidth,
-                DressLength = measurement.DressLength,
+                ShoulderToShoulder = measurement.ShoulderToShoulder,
+                ShoulderToWaistSeam = measurement.ShoulderToWaistSeam,
+                ShoulderToHem = measurement.ShoulderToHem,
                 SleeveLength = measurement.SleeveLength,
-                Wrist = measurement.Wrist
+                Bicep = measurement.Bicep,
+                EndOfSleeve = measurement.EndOfSleeve,
+                ShoulderToSideNeck = measurement.ShoulderToSideNeck,
+                ShoulderToNeckOpening = measurement.ShoulderToNeckOpening,
+                MockNeckHeight = measurement.MockNeckHeight,
+                MockNeckCircumference = measurement.MockNeckCircumference,
+                UnderarmToSideWaistSeam = measurement.UnderarmToSideWaistSeam,
+                CenterNeckToWaistPoint = measurement.CenterNeckToWaistPoint,
+                CuffHeight = measurement.CuffHeight,
+                SkirtShape = measurement.SkirtShape,
+                HasHorsehairEdgeHem = measurement.HasHorsehairEdgeHem,
+                NecklineShape = measurement.NecklineShape,
+                SleeveShape = measurement.SleeveShape,
+                HasBuiltInPuffy = measurement.HasBuiltInPuffy
             },
             request.UploadedPhotoUrl is null ? null : GetUploadedPhotoImageUrl(request.Id),
             request.BasicPreviewUrl,

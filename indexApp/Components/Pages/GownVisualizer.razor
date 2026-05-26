@@ -82,16 +82,71 @@
                 <EditForm Model="measurements">
                     <DataAnnotationsValidator />
                     <div class="field-block">
-                        <label>3. Measurements <small>(centimeters)</small></label>
+                        <label>3. Gown Specifications <small>(measurements in centimeters)</small></label>
                         <div class="measurement-grid">
-                            <label>Height <InputNumber class="form-control" min="90" max="245" step=".1" @bind-Value="measurements.Height" /></label>
-                            <label>Bust <InputNumber class="form-control" min="50" max="205" step=".1" @bind-Value="measurements.Bust" /></label>
-                            <label>Waist <InputNumber class="form-control" min="45" max="180" step=".1" @bind-Value="measurements.Waist" /></label>
-                            <label>Hips <InputNumber class="form-control" min="50" max="220" step=".1" @bind-Value="measurements.Hips" /></label>
-                            <label>Shoulder <InputNumber class="form-control" min="20" max="82" step=".1" @bind-Value="measurements.ShoulderWidth" /></label>
-                            <label>Dress length <InputNumber class="form-control" min="50" max="230" step=".1" @bind-Value="measurements.DressLength" /></label>
-                            <label>Sleeve length <InputNumber class="form-control" min="0" max="102" step=".1" @bind-Value="measurements.SleeveLength" /></label>
-                            <label>Wrist <InputNumber class="form-control" min="10" max="41" step=".1" @bind-Value="measurements.Wrist" /></label>
+                            <label>Size
+                                <InputSelect class="form-control" @bind-Value="measurements.Size">
+                                    <option value="">Select size...</option>
+                                    @foreach (var size in indexApp.Features.AiVisualizer.Services.MeasurementService.Sizes)
+                                    {
+                                        <option value="@size">@size</option>
+                                    }
+                                </InputSelect>
+                            </label>
+                            <label>Chest <InputNumber class="form-control" placeholder="0" min="50" max="205" step=".1" @bind-Value="measurements.Chest" /></label>
+                            <label>Waist <InputNumber class="form-control" placeholder="0" min="45" max="180" step=".1" @bind-Value="measurements.Waist" /></label>
+                            <label>Shoulder to Shoulder <InputNumber class="form-control" placeholder="0" min="20" max="82" step=".1" @bind-Value="measurements.ShoulderToShoulder" /></label>
+                            <label>Shoulder to Waist Seam <InputNumber class="form-control" placeholder="0" min="20" max="80" step=".1" @bind-Value="measurements.ShoulderToWaistSeam" /></label>
+                            <label>Shoulder to Hem <InputNumber class="form-control" placeholder="0" min="50" max="230" step=".1" @bind-Value="measurements.ShoulderToHem" /></label>
+                            <label>Sleeve length <InputNumber class="form-control" placeholder="0" min="0" max="102" step=".1" @bind-Value="measurements.SleeveLength" /></label>
+                            <label>Bicep <InputNumber class="form-control" placeholder="0" min="15" max="70" step=".1" @bind-Value="measurements.Bicep" /></label>
+                            <label>End of Sleeve <InputNumber class="form-control" placeholder="0" min="10" max="41" step=".1" @bind-Value="measurements.EndOfSleeve" /></label>
+                            <label>Shoulder to Side Neck <InputNumber class="form-control" placeholder="0" min="5" max="35" step=".1" @bind-Value="measurements.ShoulderToSideNeck" /></label>
+                            <label>Shoulder to Neck Opening <InputNumber class="form-control" placeholder="0" min="5" max="60" step=".1" @bind-Value="measurements.ShoulderToNeckOpening" /></label>
+                            <label>Mock Neck Height <InputNumber class="form-control" placeholder="0" min="0" max="25" step=".1" @bind-Value="measurements.MockNeckHeight" /></label>
+                            <label>Mock Neck Circumference <InputNumber class="form-control" placeholder="0" min="0" max="80" step=".1" @bind-Value="measurements.MockNeckCircumference" /></label>
+                            <label>Underarm to Side Waist Seam <InputNumber class="form-control" placeholder="0" min="5" max="60" step=".1" @bind-Value="measurements.UnderarmToSideWaistSeam" /></label>
+                            <label>Center Neck to Waist Point <InputNumber class="form-control" placeholder="0" min="15" max="90" step=".1" @bind-Value="measurements.CenterNeckToWaistPoint" /></label>
+                            <label>Cuff Height <InputNumber class="form-control" placeholder="0" min="0" max="30" step=".1" @bind-Value="measurements.CuffHeight" /></label>
+                            <label>Skirt Shape
+                                <InputSelect class="form-control" @bind-Value="measurements.SkirtShape">
+                                    <option value="">Select skirt shape...</option>
+                                    @foreach (var shape in indexApp.Features.AiVisualizer.Services.MeasurementService.SkirtShapes)
+                                    {
+                                        <option value="@shape">@shape</option>
+                                    }
+                                </InputSelect>
+                            </label>
+                            <label>Horsehair Edge Hem
+                                <InputSelect class="form-control" @bind-Value="measurements.HasHorsehairEdgeHem">
+                                    <option value="false">No</option>
+                                    <option value="true">Yes</option>
+                                </InputSelect>
+                            </label>
+                            <label>Neckline Shape
+                                <InputSelect class="form-control" @bind-Value="measurements.NecklineShape">
+                                    <option value="">Select neckline...</option>
+                                    @foreach (var shape in indexApp.Features.AiVisualizer.Services.MeasurementService.NecklineShapes)
+                                    {
+                                        <option value="@shape">@shape</option>
+                                    }
+                                </InputSelect>
+                            </label>
+                            <label>Sleeve Shape
+                                <InputSelect class="form-control" @bind-Value="measurements.SleeveShape">
+                                    <option value="">Select sleeve shape...</option>
+                                    @foreach (var shape in indexApp.Features.AiVisualizer.Services.MeasurementService.SleeveShapes)
+                                    {
+                                        <option value="@shape">@shape</option>
+                                    }
+                                </InputSelect>
+                            </label>
+                            <label>Built-in Puffy
+                                <InputSelect class="form-control" @bind-Value="measurements.HasBuiltInPuffy">
+                                    <option value="false">No</option>
+                                    <option value="true">Yes</option>
+                                </InputSelect>
+                            </label>
                         </div>
                         <ValidationSummary />
                     </div>
