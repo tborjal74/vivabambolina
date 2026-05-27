@@ -109,6 +109,8 @@ public sealed class DesignSelectionDto
     public string WaistShape { get; set; } = string.Empty;
     public string FabricType { get; set; } = string.Empty;
     public string FabricPattern { get; set; } = string.Empty;
+    public string ColorName { get; set; } = string.Empty;
+    public string ColorHexCode { get; set; } = string.Empty;
     public string Accessories { get; set; } = string.Empty;
     public string BackClosure { get; set; } = string.Empty;
 }

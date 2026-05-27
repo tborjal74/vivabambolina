@@ -122,39 +122,71 @@
                         </select>
                     </div>
 
-                    <div class="field-block">
-                        <label for="fabric-type">7. Fabric Type</label>
-                        <select id="fabric-type" class="form-control @(string.IsNullOrWhiteSpace(selectedFabricType) ? "placeholder-control" : null)" @bind="selectedFabricType">
-                            <option value="" disabled>Select fabric type...</option>
+                    <div class="field-block material-field">
+                        <label>7. Fabric Type</label>
+                        <div class="material-grid" aria-label="Select fabric type">
                             @foreach (var fabric in FabricTypes)
                             {
-                                <option value="@fabric">@fabric</option>
+                                <button type="button"
+                                        class="material-option @(selectedFabricType == fabric.Name ? "selected" : null)"
+                                        aria-pressed="@(selectedFabricType == fabric.Name)"
+                                        @onclick="() => selectedFabricType = fabric.Name">
+                                    <span class="material-sample fabric-@fabric.SampleClass" aria-hidden="true"></span>
+                                    <span>@fabric.Name</span>
+                                </button>
                             }
-                        </select>
+                        </div>
                     </div>
 
-                    <div class="field-block">
-                        <label for="fabric-pattern">8. Fabric Texture / Pattern</label>
-                        <select id="fabric-pattern" class="form-control @(string.IsNullOrWhiteSpace(selectedFabricPattern) ? "placeholder-control" : null)" @bind="selectedFabricPattern">
-                            <option value="" disabled>Select texture or pattern...</option>
+                    <div class="field-block material-field">
+                        <label>8. Fabric Texture / Pattern</label>
+                        <div class="material-grid" aria-label="Select fabric texture or pattern">
                             @foreach (var pattern in FabricPatterns)
                             {
-                                <option value="@pattern">@pattern</option>
+                                <button type="button"
+                                        class="material-option @(selectedFabricPattern == pattern.Name ? "selected" : null)"
+                                        aria-pressed="@(selectedFabricPattern == pattern.Name)"
+                                        @onclick="() => selectedFabricPattern = pattern.Name">
+                                    <span class="material-sample pattern-@pattern.SampleClass" aria-hidden="true"></span>
+                                    <span>@pattern.Name</span>
+                                </button>
                             }
-                        </select>
+                        </div>
                     </div>
 
-                    <div class="field-block">
+                    <div class="field-block color-field">
                         <label>9. Color</label>
-                        <div class="swatches" aria-label="Gown color">
-                            @foreach (var color in AvailableColors)
+                        <div class="honeycomb-picker" aria-label="Select gown color">
+                            @foreach (var row in ColorPaletteRows)
                             {
-                                <button type="button"
-                                        class="@(selectedColor == color.ColorName ? "selected" : null)"
-                                        style="background:@color.HexCode"
-                                        title="@color.ColorName"
-                                        @onclick="() => selectedColor = color.ColorName"></button>
+                                <div class="honeycomb-row">
+                                    @foreach (var color in row)
+                                    {
+                                        <button type="button"
+                                                class="hex-color @(pickedColorHex == color.HexCode ? "selected" : null)"
+                                                style="background-color:@color.HexCode"
+                                                aria-label="Choose @color.Name, @color.HexCode"
+                                                aria-pressed="@(pickedColorHex == color.HexCode)"
+                                                title="@($"{color.Name} ({color.HexCode})")"
+                                                @onclick="() => SelectPaletteColor(color)"></button>
+                                    }
+                                </div>
                             }
+                        </div>
+                        <div class="color-picker-row" aria-live="polite">
+                            <span class="picked-color" style="background-color:@pickedColorHex" aria-hidden="true"></span>
+                            <div class="color-match">
+                                @if (SelectedPaletteColor is not null)
+                                {
+                                    <strong>@SelectedPaletteColor.Name</strong>
+                                    <small>@SelectedPaletteColor.HexCode</small>
+                                }
+                                else
+                                {
+                                    <strong>Select a shade</strong>
+                                    <small>Choose a color from the palette.</small>
+                                }
+                            </div>
                         </div>
                     </div>
 
@@ -269,7 +301,7 @@
                         <li>Skirt: @(string.IsNullOrWhiteSpace(measurementValues.SkirtShape) ? "Not selected" : measurementValues.SkirtShape)</li>
                         <li>Fabric: @(string.IsNullOrWhiteSpace(selectedFabricType) ? "Not selected" : selectedFabricType)</li>
                         <li>Texture: @(string.IsNullOrWhiteSpace(selectedFabricPattern) ? "Not selected" : selectedFabricPattern)</li>
-                        <li>Color: @(string.IsNullOrWhiteSpace(selectedColor) ? "Not selected" : selectedColor)</li>
+                        <li>Color: @(SelectedPaletteColor is null ? "Not selected" : $"{SelectedPaletteColor.Name} ({SelectedPaletteColor.HexCode})")</li>
                         <li>Accessories: @(string.IsNullOrWhiteSpace(selectedAccessories) ? "Not selected" : selectedAccessories)</li>
                         <li>Closure: @(string.IsNullOrWhiteSpace(selectedBackClosure) ? "Not selected" : selectedBackClosure)</li>
                         <li>Measurements: @(string.IsNullOrWhiteSpace(measurementValues.Size) ? "Not entered" : $"{measurementValues.Size} size entered")</li>
@@ -374,6 +406,7 @@
     private string selectedFabricType = string.Empty;
     private string selectedFabricPattern = string.Empty;
     private string selectedColor = string.Empty;
+    private string pickedColorHex = "#f1cfc3";
     private string selectedAccessories = string.Empty;
     private string selectedBackClosure = string.Empty;
     private string? uploadedPhotoDataUrl;
@@ -427,16 +460,45 @@
         "No Belt"
     ];
 
-    private static readonly IReadOnlyList<string> FabricTypes =
+    private static readonly IReadOnlyList<MaterialSampleOption> FabricTypes =
     [
-        "Satin", "Taffeta", "Mikado", "Tulle", "Layered Tulle", "Metallic Brocade",
-        "Jacquard", "Textured Jacquard", "Embroidered Fabric", "Lace", "Organza"
+        new("Satin", "satin"),
+        new("Taffeta", "taffeta"),
+        new("Mikado", "mikado"),
+        new("Tulle", "tulle"),
+        new("Layered Tulle", "layered-tulle"),
+        new("Metallic Brocade", "brocade"),
+        new("Jacquard", "jacquard"),
+        new("Textured Jacquard", "textured-jacquard"),
+        new("Embroidered Fabric", "embroidered"),
+        new("Lace", "lace"),
+        new("Organza", "organza")
     ];
 
-    private static readonly IReadOnlyList<string> FabricPatterns =
+    private static readonly IReadOnlyList<MaterialSampleOption> FabricPatterns =
     [
-        "Plain Smooth", "Metallic Shine", "Raised Texture", "Floral Embroidery", "Gold Brocade",
-        "Silver Brocade", "Jacquard Pattern", "Sequin Texture", "Soft Sheer Layers"
+        new("Plain Smooth", "plain"),
+        new("Metallic Shine", "metallic"),
+        new("Raised Texture", "raised"),
+        new("Floral Embroidery", "floral"),
+        new("Gold Brocade", "gold"),
+        new("Silver Brocade", "silver"),
+        new("Jacquard Pattern", "jacquard"),
+        new("Sequin Texture", "sequin"),
+        new("Soft Sheer Layers", "sheer")
+    ];
+
+    private static readonly IReadOnlyList<IReadOnlyList<PaletteColor>> ColorPaletteRows =
+    [
+        [new("Deep Teal", "#123443"), new("Ocean Teal", "#07516d"), new("Marine Blue", "#06658d"), new("Royal Blue", "#0754b5"), new("Cobalt", "#123cca"), new("Indigo", "#2421c3"), new("Deep Violet", "#351da8")],
+        [new("Pine", "#075b47"), new("Teal", "#087f76"), new("Lagoon", "#0799aa"), new("Cerulean", "#0796d0"), new("Azure", "#0874dc"), new("Sapphire", "#1752db"), new("Iris Blue", "#3831d7"), new("Violet", "#551bc1"), new("Plum", "#64179a")],
+        [new("Forest Green", "#067027"), new("Emerald", "#00984e"), new("Jade", "#05b982"), new("Aqua", "#07cdd1"), new("Sky Blue", "#08bbeb"), new("Cornflower", "#2799f1"), new("Periwinkle", "#5283f0"), new("Lavender Blue", "#7861e7"), new("Orchid", "#982ed7"), new("Magenta", "#ac12aa"), new("Berry", "#94117d")],
+        [new("Leaf Green", "#098015"), new("Kelly Green", "#00ad22"), new("Spring Green", "#00d357"), new("Mint Teal", "#02edb4"), new("Bright Cyan", "#16ebed"), new("Powder Blue", "#55ccf3"), new("Baby Blue", "#82b2f3"), new("Soft Lavender", "#ac8cea"), new("Lilac", "#cb61e6"), new("Fuchsia", "#e735d3"), new("Hot Pink", "#df14a7"), new("Raspberry", "#bd087b"), new("Wine Berry", "#95115b")],
+        [new("Moss Green", "#176c13"), new("Grass Green", "#16ad0a"), new("Lime", "#42ea20"), new("Pistachio", "#7bf36c"), new("Seafoam", "#a7f8be"), new("Ice Mint", "#d4fbf3"), new("Pearl White", "#f5f7fa"), new("Pale Lavender", "#eddcff"), new("Blush Lilac", "#e7b7f9"), new("Mauve Pink", "#e881ed"), new("Pink Orchid", "#ec40d6"), new("Cerise", "#e916a2"), new("Deep Rose", "#be106e")],
+        [new("Olive", "#46500b"), new("Olive Green", "#709712"), new("Chartreuse", "#9eda17"), new("Lemon Lime", "#cdf43b"), new("Butter Yellow", "#edfb79"), new("Vanilla", "#fcf5a6"), new("Ivory", "#fff1dd"), new("Blush", "#ffd8e3"), new("Soft Pink", "#ffb2cc"), new("Rose Pink", "#ff7ea8"), new("Watermelon", "#f84b7e"), new("Crimson Pink", "#e91b50"), new("Garnet", "#b70d39")],
+        [new("Antique Gold", "#665111"), new("Old Gold", "#ac8410"), new("Goldenrod", "#dbb10b"), new("Sunflower", "#f2db14"), new("Yellow", "#ffed37"), new("Marigold", "#ffd15c"), new("Peach", "#ffad72"), new("Coral", "#fa7968"), new("Vermilion", "#ed493d"), new("Scarlet", "#dd221c"), new("Deep Red", "#aa1518")],
+        [new("Walnut", "#624018"), new("Bronze", "#976212"), new("Burnt Amber", "#ca7a08"), new("Amber", "#ef9605"), new("Orange Gold", "#ffac03"), new("Tangerine", "#ff7300"), new("Orange Red", "#f34309"), new("True Red", "#df1809"), new("Oxblood", "#aa120d")],
+        [new("Espresso", "#51301b"), new("Chestnut", "#774116"), new("Copper", "#a34b0f"), new("Burnt Orange", "#c85008"), new("Paprika", "#e24406"), new("Brick Red", "#d52107"), new("Mahogany", "#a3130b")]
     ];
 
     private static readonly IReadOnlyList<string> Accessories =
@@ -464,9 +526,14 @@
         "image/webp"
     };
 
-    private IEnumerable<FabricColorDto> AvailableColors => catalogFabrics
+    private IReadOnlyList<FabricColorDto> AvailableColors => catalogFabrics
         .SelectMany(fabric => fabric.Colors)
-        .DistinctBy(color => color.ColorName);
+        .DistinctBy(color => color.ColorName)
+        .ToList();
+
+    private PaletteColor? SelectedPaletteColor => ColorPaletteRows
+        .SelectMany(row => row)
+        .FirstOrDefault(color => color.HexCode == pickedColorHex && color.Name == selectedColor);
 
     private string? DisplayedPreviewUrl => isShowingBackPreview ? latestBackPreviewUrl : latestPreviewUrl;
 
@@ -516,6 +583,29 @@
     {
         catalogStyles = await VisualizerService.GetStylesAsync();
         catalogFabrics = await VisualizerService.GetFabricsAsync();
+    }
+
+    private void SelectPaletteColor(PaletteColor color)
+    {
+        selectedColor = color.Name;
+        pickedColorHex = color.HexCode;
+    }
+
+    private static (int Red, int Green, int Blue) ParseRgb(string hexCode)
+    {
+        var value = hexCode.TrimStart('#');
+        return (
+            Convert.ToInt32(value[0..2], 16),
+            Convert.ToInt32(value[2..4], 16),
+            Convert.ToInt32(value[4..6], 16));
+    }
+
+    private static int ColorDistance((int Red, int Green, int Blue) left, (int Red, int Green, int Blue) right)
+    {
+        var red = left.Red - right.Red;
+        var green = left.Green - right.Green;
+        var blue = left.Blue - right.Blue;
+        return (red * red) + (green * green) + (blue * blue);
     }
 
     private async Task OnPhotoSelected(InputFileChangeEventArgs args)
@@ -587,9 +677,10 @@
         }
 
         var style = catalogStyles.FirstOrDefault();
+        var selectedRgb = ParseRgb(pickedColorHex);
         var selectedCatalogColor = catalogFabrics
             .SelectMany(fabric => fabric.Colors.Select(color => (Fabric: fabric, Color: color)))
-            .FirstOrDefault(item => item.Color.ColorName == selectedColor);
+            .MinBy(item => ColorDistance(selectedRgb, ParseRgb(item.Color.HexCode)));
         var fabric = selectedCatalogColor.Fabric;
         var color = selectedCatalogColor.Color;
 
@@ -627,6 +718,8 @@
                         WaistShape = selectedWaistShape,
                         FabricType = selectedFabricType,
                         FabricPattern = selectedFabricPattern,
+                        ColorName = selectedColor,
+                        ColorHexCode = pickedColorHex,
                         Accessories = selectedAccessories,
                         BackClosure = selectedBackClosure
                     }
@@ -659,4 +752,8 @@
             isGenerating = false;
         }
     }
+
+    private sealed record MaterialSampleOption(string Name, string SampleClass);
+
+    private sealed record PaletteColor(string Name, string HexCode);
 }

@@ -13,6 +13,8 @@ public sealed class VisualizerRequest
     public string? WaistShape { get; set; }
     public string? FabricType { get; set; }
     public string? FabricPattern { get; set; }
+    public string? SelectedColorName { get; set; }
+    public string? SelectedColorHexCode { get; set; }
     public string? Accessories { get; set; }
     public string? BackClosure { get; set; }
     public string? UploadedPhotoUrl { get; set; }

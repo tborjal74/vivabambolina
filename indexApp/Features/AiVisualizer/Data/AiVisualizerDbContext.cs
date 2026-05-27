@@ -119,6 +119,8 @@ public sealed class AiVisualizerDbContext : DbContext
             entity.Property(request => request.WaistShape).HasColumnName("waist_shape").HasMaxLength(120);
             entity.Property(request => request.FabricType).HasColumnName("fabric_type").HasMaxLength(120);
             entity.Property(request => request.FabricPattern).HasColumnName("fabric_pattern").HasMaxLength(120);
+            entity.Property(request => request.SelectedColorName).HasColumnName("selected_color_name").HasMaxLength(120);
+            entity.Property(request => request.SelectedColorHexCode).HasColumnName("selected_color_hex_code").HasMaxLength(16);
             entity.Property(request => request.Accessories).HasColumnName("accessories").HasMaxLength(120);
             entity.Property(request => request.BackClosure).HasColumnName("back_closure").HasMaxLength(120);
             entity.Property(request => request.UploadedPhotoUrl).HasColumnName("uploaded_photo_url").HasMaxLength(500);

@@ -264,6 +264,8 @@ public sealed class VisualizerService
             WaistShape = dto.DesignSelection?.WaistShape,
             FabricType = dto.DesignSelection?.FabricType,
             FabricPattern = dto.DesignSelection?.FabricPattern,
+            SelectedColorName = dto.DesignSelection?.ColorName,
+            SelectedColorHexCode = dto.DesignSelection?.ColorHexCode,
             Accessories = dto.DesignSelection?.Accessories,
             BackClosure = dto.DesignSelection?.BackClosure,
             UploadedPhotoUrl = uploadedPhotoUrl,
@@ -414,7 +416,7 @@ public sealed class VisualizerService
                 preview.VisualizerRequestId,
                 preview.VisualizerRequest!.DressTemplate ?? preview.VisualizerRequest.DressStyle!.Name,
                 preview.VisualizerRequest.FabricType ?? preview.VisualizerRequest.Fabric!.Name,
-                preview.VisualizerRequest.FabricColor!.ColorName,
+                preview.VisualizerRequest.SelectedColorName ?? preview.VisualizerRequest.FabricColor!.ColorName,
                 preview.ImageUrl,
                 preview.CreatedAt))
             .ToListAsync(cancellationToken);
@@ -664,6 +666,8 @@ public sealed class VisualizerService
                     WaistShape = request.WaistShape ?? string.Empty,
                     FabricType = request.FabricType ?? string.Empty,
                     FabricPattern = request.FabricPattern ?? string.Empty,
+                    ColorName = request.SelectedColorName ?? string.Empty,
+                    ColorHexCode = request.SelectedColorHexCode ?? string.Empty,
                     Accessories = request.Accessories ?? string.Empty,
                     BackClosure = request.BackClosure ?? string.Empty
                 }
@@ -685,6 +689,8 @@ public sealed class VisualizerService
             || !string.IsNullOrWhiteSpace(request.WaistShape)
             || !string.IsNullOrWhiteSpace(request.FabricType)
             || !string.IsNullOrWhiteSpace(request.FabricPattern)
+            || !string.IsNullOrWhiteSpace(request.SelectedColorName)
+            || !string.IsNullOrWhiteSpace(request.SelectedColorHexCode)
             || !string.IsNullOrWhiteSpace(request.Accessories)
             || !string.IsNullOrWhiteSpace(request.BackClosure);
     }

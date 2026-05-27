@@ -12,15 +12,18 @@ public sealed class PromptBuilder
         var measurement = request.Measurement ?? throw new InvalidOperationException("Request measurement was not loaded.");
         var dressTemplate = request.DressTemplate ?? style.Name;
         var fabricType = request.FabricType ?? fabric.Name;
+        var colorName = request.SelectedColorName ?? color.ColorName;
+        var colorHexCode = request.SelectedColorHexCode ?? color.HexCode;
 
         var poseDirection = view == PreviewView.Back
             ? "Generate a back-view full-length portrait of the same person wearing this gown, showing the rear gown construction and back closure clearly. Preserve hair, body proportions, skin tone, and background appearance consistently with the uploaded person. "
             : "Generate a front-view full-length portrait of the same person wearing this gown, showing the neckline and front bodice clearly. Preserve the person's face, identity, skin tone, hair, body position, proportions, and visible background. ";
 
         return
-            $"Edit the provided front-facing full-body photo so the same person is realistically wearing a {color.ColorName} {fabricType} {dressTemplate}. " +
+            $"Edit the provided front-facing full-body photo so the same person is realistically wearing a {colorName} ({colorHexCode}) {fabricType} {dressTemplate}. " +
             poseDirection +
             "Change only the outfit and viewing direction as needed for the gown visualization. " +
+            $"Match the gown color precisely to {colorName} with hexadecimal color {colorHexCode}; do not substitute another named color. " +
             "Compose the output as a full-length portrait with the entire head, hair, body, gown hem, and both feet visible inside the frame. Do not crop the head, face, feet, or dress hem, and do not zoom in. " +
             $"Use the selected gown design: neckline {measurement.NecklineShape}, sleeve type {measurement.SleeveShape}, skirt design {measurement.SkirtShape}, bodice {request.BodiceDesign ?? style.Silhouette}, waist {request.WaistShape ?? "natural waist"}, dress length {style.DressLength}. " +
             $"Use fabric texture or pattern {request.FabricPattern ?? fabric.Description}, accessories {request.Accessories ?? "none"}, and back closure {request.BackClosure ?? "standard concealed closure"}. " +

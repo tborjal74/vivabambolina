@@ -319,22 +319,203 @@
     font-style: normal;
 }
 
-.swatches {
+.material-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: .55rem;
+}
+
+.material-option {
+    display: grid;
+    gap: .42rem;
+    min-width: 0;
+    padding: .35rem;
+    border: 1px solid #e3d8d4;
+    border-radius: 6px;
+    background: #fff;
+    color: #594b48;
+    font-size: .67rem;
+    font-weight: 800;
+    line-height: 1.22;
+    text-align: left;
+    cursor: pointer;
+}
+
+.material-option:hover,
+.material-option:focus-visible {
+    border-color: #b88a99;
+    box-shadow: 0 0 0 2px rgba(184, 138, 153, .15);
+}
+
+.material-option.selected {
+    border-color: #322927;
+    background: #fffaf8;
+    box-shadow: 0 0 0 1px #322927;
+}
+
+.material-sample {
+    display: block;
+    width: 100%;
+    aspect-ratio: 1;
+    overflow: hidden;
+    border-radius: 4px;
+    box-shadow: inset 0 0 0 1px rgba(67, 52, 48, .12);
+}
+
+.fabric-satin {
+    background: linear-gradient(122deg, #d6aaa5 0%, #faebe2 29%, #b47c83 49%, #f4dad2 73%, #c18f91 100%);
+}
+
+.fabric-taffeta {
+    background: repeating-linear-gradient(115deg, #d9cbc3 0 3px, #f3e9e3 3px 6px, #c9b7b0 6px 8px);
+}
+
+.fabric-mikado {
+    background: linear-gradient(135deg, #eee0da 0 42%, #d7c5bd 48%, #fbf4ef 56%, #d5c0ba 100%);
+}
+
+.fabric-tulle {
+    background-color: #f4e9e7;
+    background-image: repeating-linear-gradient(45deg, transparent 0 5px, rgba(153, 119, 125, .25) 5px 6px), repeating-linear-gradient(-45deg, transparent 0 5px, rgba(153, 119, 125, .18) 5px 6px);
+}
+
+.fabric-layered-tulle {
+    background: repeating-linear-gradient(165deg, rgba(255, 255, 255, .55) 0 8px, rgba(193, 160, 164, .2) 8px 13px), #ead8d8;
+}
+
+.fabric-brocade,
+.pattern-gold {
+    background-color: #d1ad68;
+    background-image: radial-gradient(ellipse at center, #f6e0a1 0 17%, transparent 18%), radial-gradient(ellipse at center, #876236 0 13%, transparent 14%);
+    background-position: 0 0, 12px 12px;
+    background-size: 24px 24px;
+}
+
+.fabric-jacquard,
+.pattern-jacquard {
+    background-color: #c8b2ac;
+    background-image: repeating-linear-gradient(45deg, rgba(255, 244, 239, .55) 0 2px, transparent 2px 9px), repeating-linear-gradient(-45deg, rgba(105, 72, 74, .2) 0 2px, transparent 2px 9px);
+}
+
+.fabric-textured-jacquard,
+.pattern-raised {
+    background-color: #c7aea5;
+    background-image: radial-gradient(circle, #ead8d1 0 26%, transparent 28%), radial-gradient(circle, #9f807b 0 19%, transparent 21%);
+    background-position: 0 0, 8px 8px;
+    background-size: 16px 16px;
+}
+
+.fabric-embroidered,
+.pattern-floral {
+    background-color: #f2e1de;
+    background-image: radial-gradient(circle at 50% 20%, #d18f9b 0 9%, transparent 10%), radial-gradient(circle at 30% 48%, #d18f9b 0 9%, transparent 10%), radial-gradient(circle at 70% 48%, #d18f9b 0 9%, transparent 10%), radial-gradient(circle at 50% 65%, #b67a88 0 13%, transparent 14%);
+    background-size: 32px 32px;
+}
+
+.fabric-lace {
+    background-color: #fbf6f0;
+    background-image: radial-gradient(circle, transparent 0 31%, #d9c4bd 33% 39%, transparent 41%), linear-gradient(45deg, transparent 47%, rgba(200, 173, 166, .45) 48% 52%, transparent 53%);
+    background-size: 26px 26px;
+}
+
+.fabric-organza,
+.pattern-sheer {
+    background: repeating-linear-gradient(100deg, rgba(255, 255, 255, .6) 0 9px, rgba(204, 187, 189, .28) 10px 14px), linear-gradient(145deg, #faf5f3, #e4d5d4);
+}
+
+.pattern-plain {
+    background: linear-gradient(135deg, #e8d8d3, #fdf7f2 50%, #d9c2bc);
+}
+
+.pattern-metallic {
+    background: repeating-linear-gradient(125deg, #baa18c 0 4px, #f7e8c9 6px 10px, #9e8579 12px 15px);
+}
+
+.pattern-silver {
+    background-color: #cdd0d5;
+    background-image: radial-gradient(ellipse at center, #fbfcfd 0 17%, transparent 18%), radial-gradient(ellipse at center, #8a9098 0 13%, transparent 14%);
+    background-position: 0 0, 12px 12px;
+    background-size: 24px 24px;
+}
+
+.pattern-sequin {
+    background-color: #d5b3b0;
+    background-image: radial-gradient(circle, #fff1e8 0 19%, #bd8788 22% 36%, transparent 38%);
+    background-size: 18px 18px;
+}
+
+.honeycomb-picker {
+    display: grid;
+    justify-content: center;
+    padding: .45rem .2rem .65rem;
+    background: #fff;
+}
+
+.honeycomb-row {
     display: flex;
-    gap: .75rem;
-    flex-wrap: wrap;
+    justify-content: center;
+    gap: 1px;
+    height: 1.22rem;
 }
 
-.swatches button {
-    width: 2rem;
-    height: 2rem;
-    border: 2px solid #fff;
-    border-radius: 50%;
-    box-shadow: 0 0 0 1px #d7ceca;
+.hex-color {
+    width: 1.37rem;
+    height: 1.57rem;
+    padding: 0;
+    border: 0;
+    clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%);
+    cursor: pointer;
+    transition: transform .12s ease, filter .12s ease;
 }
 
-.swatches button.selected {
-    box-shadow: 0 0 0 2px #171313;
+.hex-color:hover,
+.hex-color:focus-visible {
+    z-index: 1;
+    filter: brightness(1.1);
+    transform: scale(1.16);
+}
+
+.hex-color:focus-visible {
+    outline: 2px solid #302725;
+    outline-offset: 1px;
+}
+
+.hex-color.selected {
+    filter: drop-shadow(0 0 2px #201817) brightness(1.08);
+    transform: scale(1.16);
+}
+
+.color-picker-row {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    padding: .55rem .6rem;
+    border: 1px solid #e5dad5;
+    border-radius: 5px;
+    background: #fffaf8;
+}
+
+.picked-color {
+    flex: 0 0 auto;
+    width: 2.15rem;
+    height: 2.15rem;
+    border: 1px solid rgba(40, 33, 31, .18);
+    border-radius: 4px;
+}
+
+.color-match {
+    display: grid;
+    gap: .1rem;
+    min-width: 0;
+}
+
+.color-match strong {
+    color: #302725;
+    font-size: .76rem;
+}
+
+.color-match small {
+    font-size: .67rem;
 }
 
 .measurement-grid {
@@ -861,7 +1042,7 @@
 
 /* Wireframe placement, retaining the visualizer's original boutique card treatment. */
 .product-studio {
-    grid-template-columns: minmax(14rem, 17rem) minmax(29rem, 1fr) minmax(16rem, 19rem);
+    grid-template-columns: minmax(21rem, 23rem) minmax(29rem, 1fr) minmax(16rem, 19rem);
     grid-template-rows: auto auto;
     align-items: start;
     gap: clamp(1.1rem, 2.5vw, 2rem);
@@ -887,6 +1068,7 @@
     background: rgba(255, 255, 255, .9);
     box-shadow: 0 12px 30px rgba(61, 41, 37, .04);
     max-height: calc(100vh - 7.75rem);
+    overflow-x: clip;
     overflow-y: auto;
     scrollbar-color: #d7c6c0 transparent;
     scrollbar-width: thin;
@@ -1008,7 +1190,7 @@
 
 @media (max-width: 1150px) {
     .product-studio {
-        grid-template-columns: minmax(14rem, 17rem) minmax(27rem, 1fr);
+        grid-template-columns: minmax(21rem, 23rem) minmax(27rem, 1fr);
     }
 
     .right-panel {
